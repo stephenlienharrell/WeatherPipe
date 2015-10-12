@@ -8,6 +8,7 @@ import java.lang.*;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.ec2.model.InstanceType;
@@ -64,18 +65,11 @@ public class ElasticMapReduceApp
      * @see com.amazonaws.ClientConfiguration
      */
     private static void init() throws Exception {
-    	AWSCredentials credentials = null;
-        try {
-            credentials = new ProfileCredentialsProvider("default").getCredentials();
-        } catch (Exception e) {
-            throw new AmazonClientException(
-                    "Cannot load the credentials from the credential profiles file. " +
-                    "Please make sure that your credentials file is at the correct " +
-                    "location (/Users/lalavaishnode/.aws/credentials), and is in valid format.",
-                    e);
-        }
+        AWSCredentials credentials = new PropertiesCredentials(
+                                      AwsConsoleApp.class
+                                          .getResourceAsStream("AwsCredentials.properties"));
+
         emr = new AmazonElasticMapReduceClient(credentials);
-        System.out.println("WTF IS WRONG\n");
     }
 
     public static void main(String[] args) throws Exception {
@@ -103,6 +97,10 @@ public class ElasticMapReduceApp
             RunJobFlowRequest request = new RunJobFlowRequest(FLOW_NAME, instances);
             System.out.println("\tusing log URI: " + S3N_LOG_URI);
             request.setLogUri(S3N_LOG_URI);
+            
+            
+            //request.setServiceRole("EMR_DefaultRole");
+            request.setJobFlowRole("EMRJobflowDefault");
 
             // Configure the Hadoop jar to use
             System.out.println("\tusing jar URI: " + S3N_HADOOP_JAR);
