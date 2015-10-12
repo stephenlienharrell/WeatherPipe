@@ -14,7 +14,7 @@ public class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
         }
 
         try {
-        	context.write(key, new IntWritable(sum));
+        	context.write(keyname, new IntWritable(sum));
         }
         catch (Exception E) {
         	// Send signal
