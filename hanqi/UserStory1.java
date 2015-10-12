@@ -1,17 +1,3 @@
-/*
- * Copyright 2010-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
 import java.awt.List;
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +13,8 @@ import java.util.Scanner;
 import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
+
+import org.joda.time.DateTime;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -44,52 +32,13 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-/**
- * This sample demonstrates how to make basic requests to Amazon S3 using the
- * AWS SDK for Java.
- * <p>
- * <b>Prerequisites:</b> You must have a valid Amazon Web Services developer
- * account, and be signed up to use Amazon S3. For more information on Amazon
- * S3, see http://aws.amazon.com/s3.
- * <p>
- * Fill in your AWS access credentials in the provided credentials file
- * template, and be sure to move the file to the default location
- * (/Users/Hanqi/.aws/credentials) where the sample code will load the credentials from.
- * <p>
- * <b>WARNING:</b> To avoid accidental leakage of your credentials, DO NOT keep
- * the credentials file in your source directory.
- *
- * http://aws.amazon.com/security-credentials
- */
+
 public class UserStory1 {
 	
     //Get input from the user
-	
-	public static String getInput() {
-		String s = "";
-		Scanner in = new Scanner(System.in);
-		System.out.println("plese eneter a date range with time range in the format of yyyymmdd_tttttt-yyyymmdd_tttttt."
-                           + " For example, 01:03:31 on the Jan.1st on 2010 should be presented as 20100101_010331");
-		//check format correct?
-		s = in.nextLine();
-		return s;
-	}
-	
-	/*get the beginning date&time and ending date&time from input
-     and return a String array with size of 2
-     */
-	public static String[] getRange(String input) {
-		//the period lower bound: array[0], upper bound: array[1].
-		String[] array= new String[2];
-		array = input.split("-");
-		return array;
-	}
-	
-	/*
-	 * List all the objects in the bucket
-	 */
-	public static ArrayList<String> getFileNames(AmazonS3 s3, String[] array) {
-		
+	public static ArrayList<String> getObjectNames(DateTime start, DateTime end, AmazonS3 s3){
+		String lowBound = start.toString("yyyyMMdd_hhmmss");
+		String uppBound = end.toString("yyyyMMdd_hhmmss");
 		Region usWest2 = Region.getRegion(Regions.US_EAST_1);
         s3.setRegion(usWest2);
         
@@ -97,12 +46,11 @@ public class UserStory1 {
         // String key = "1991/01/01/";
         
         ArrayList<String> ret = new ArrayList<String>();
-        
         String[] arr1 = new String[2];	//arr1[0] = the date of the lower bound, [1] = the time of the lower bound
         String[] arr2 = new String[2];	//arr2[0] = the date of the upper bound, [1] = the time of the upper bound
         
-        arr1 = array[0].split("_");
-        arr2 = array[1].split("_");
+        arr1 = lowBound.split("_");
+        arr2 = uppBound.split("_");
         
         int index = -1;	//used to find the index of '-' in the file name.
         int compInt1 = 0;	//used to compare the date
@@ -114,31 +62,20 @@ public class UserStory1 {
         String compDate;	//substring(date) of a file name
         String compTime;	//substring(time) of a file name
         String format;		//used for a file name in a format we need.
-        /*System.out.println("===========================================");
-         System.out.println("Getting Started with Amazon S3");
-         System.out.println("===========================================\n");*/
         
         try {
             
-            /*
-             * List objects in your bucket by prefix - There are many options for
-             * listing the objects in your bucket.  Keep in mind that buckets with
-             * many objects might truncate their results when listing their objects,
-             * so be sure to check if the returned object listing is truncated, and
-             * use the AmazonS3.listNextBatchOfObjects(...) operation to retrieve
-             * additional results.
-             */
-            System.out.println("Listing objects");
             ObjectListing objectListing = s3.listObjects(new ListObjectsRequest()
                                                          .withBucketName(bucketName));
             for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
             	index = objectSummary.getKey().indexOf('.');
             	if(objectSummary.getKey().substring(index+1, index+3).compareTo("gz") != 0)
             		continue;	//skip the key with other format.
+            	
             	index = objectSummary.getKey().indexOf('_');
-            	//if(index != -1) {
-            	compDate = objectSummary.getKey().substring(index-8, index);
-            	compTime = objectSummary.getKey().substring(index+1, index+7);
+                
+            	compDate = objectSummary.getKey().substring(index-8, index);	//the current object's date
+            	compTime = objectSummary.getKey().substring(index+1, index+7);	//the current object's time
             	compInt1 = arr1[0].compareTo(compDate);
             	compInt2 = arr2[0].compareTo(compDate);
             	compInt3 = arr1[1].compareTo(compTime);
@@ -168,9 +105,20 @@ public class UserStory1 {
                                + "such as not being able to access the network.");
             System.out.println("Error Message: " + ace.getMessage());
         }
-        return ret;
+		return ret;
+		
 	}
+	
+	
+	
+	
+	
+	/*
+	 * The main function is just for testing the function above
+	 */
 	public static void main(String[] args) throws IOException {
+		//DateTime test = new DateTime();
+		//System.out.println(test.toString("yyMMdd_hhmmss"));
 		//String bucketName = "noaa-nexrad-level2";
 		//String key = "2010/01/01/KABR/KABR20100101_010331_V03.gz";
 		AWSCredentials credentials = null;
@@ -185,42 +133,20 @@ public class UserStory1 {
 		}
 		//AmazonS3 s3Client = new AmazonS3Client();
 		AmazonS3 s3Client = new AmazonS3Client(credentials);
-		
-		
-        String input = getInput();
-        String[] array = getRange(input);
-        ArrayList<String> list = getFileNames(s3Client, array);
-        int size = list.size();
+		DateTime start = new DateTime(2010, 01, 01, 12, 31, 9);
+		DateTime end = new DateTime(2010, 01, 01, 12, 40, 55);
+		ArrayList<String> list = getObjectNames(start, end, s3Client);
+		int size = list.size();
         for(int i = 0; i < size; i++) {
         	System.out.println(list.get(i));
         }
-		
-        //S3Object object = s3Client.getObject(
-        //new GetObjectRequest(bucketName, key));
-		//InputStream objectData = object.getObjectContent();
-		// Process the objectData stream.
-		//objectData.close();
-		//System.out.println(objectData.read());
-		//displayTextInputStream(objectData);
-		
-		//UncompressInputStream ucfile = new UncompressInputStream(objectData);
-		//S3Sample s = new S3Sample();
-    	//s.unzip(objectData, key1);
+        
 	}
-	
-	/*private static void displayTextInputStream(InputStream input) throws IOException {
-     BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-     while (true) {
-     String line = reader.readLine();
-     if (line == null) break;
-     
-     System.out.println("    " + line);
-     }
-     System.out.println();
-     }*/
-	
-    
 }
+
+
+
+
 
 
 
