@@ -1,5 +1,7 @@
 package edu.purdue.cs307.team16;
 
+import java.util.ArrayList;
+
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.CommandLine;
@@ -9,6 +11,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import edu.purdue.cs307.team16.RadarFilePicker;
 
 //import edu.purdue.cs307.team16.S3FileReadPrototype;
 		 
@@ -20,8 +24,9 @@ public class WeatherPipe {
 		 final String dateDesc = "Date Format is " + dateFormatString;
 		 final DateTimeFormatter dateFormat = DateTimeFormat.forPattern(
 			dateFormatString);
-		 DateTime startTime;
-		 DateTime endTime;
+		 DateTime startTime = null;
+		 DateTime endTime = null;
+		 ArrayList<String> radarFileNames;
 	
 		 // create Options object
 		 Options options = new Options();
@@ -41,19 +46,27 @@ public class WeatherPipe {
 				startTime = DateTime.parse(
 					line.getOptionValue("start_time"), 
 					dateFormat);
-			 }
+			 } else {
+				System.out.println("Flag start_time is required");
+				System.exit(1);
+			 } 
+				
 			 if( line.hasOption( "end_time" ) ) {
 				endTime = DateTime.parse(
 					line.getOptionValue("end_time"), 
 					dateFormat);
-			 }
+			 } else {
+				System.out.println("Flag end_time is required");
+				System.exit(1);
+			 } 
 		 } catch( ParseException exp ) {
 			 System.out.println( "Unexpected exception:" + exp.getMessage() );
 		 }
 
+		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, RadarFilePicker.getS3());
 		 // send DateTime objects to s3 file lister
 		 // send list of files to emr starter
-	
+			
 	
 	}
 }
