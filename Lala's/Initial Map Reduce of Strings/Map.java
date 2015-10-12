@@ -6,9 +6,9 @@ import org.apache.hadoop.mapreduce.*;
 
 /*
     Input is of the form:
-    ("bucketname", "key");
-    ("bucketname", "key");
-    ("bucketname", "key");
+    ("bucketname", "key")
+    ("bucketname", "key")
+    ("bucketname", "key")
 
     At this point, I assume they are in the same bucket. 
 */
