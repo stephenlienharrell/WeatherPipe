@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,95 +22,82 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.util.IOUtils;
 
+import ucar.ma2.Array;
+import ucar.nc2.NCdumpW;
 import ucar.nc2.NetcdfFile;
+import ucar.nc2.Variable;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.util.cache.FileCacheable;
 
 // goal: to be able to read data from s3
 
 public class S3_test1 {
-
-	public static void main(String[] args){
-
-
-		byte[] buffer = new byte[1024];
+	
+	String Access_Key_ID = "AKIAIPWBEPHBGGFQG6MQ";
+	String Secret_Access_Key = "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";
+	
+	public static void main(String[] args) {
 
 		AWSCredentials credentials = null;
-		//try {
-			credentials = new ProfileCredentialsProvider("default").getCredentials();
-		//} 
-		/*catch (Exception e) {
+		try {
+			credentials = new ProfileCredentialsProvider().getCredentials();
+		} 
+		catch (Exception e) {
 			throw new AmazonClientException(
 					"Cannot load the credentials from the credential profiles file. " +
 							"Please make sure that your credentials file is at the correct " +
 							"location (/Users/lalavaishnode/.aws/credentials), and is in valid format.",
 							e);
 			
-		}*/
-
+		}
 
 		AmazonS3 s3 = new AmazonS3Client(credentials);
 		Region usEast1 = Region.getRegion(Regions.US_EAST_1);
 		s3.setRegion(usEast1);
 
-
 		// Setting bucket parameters
 		String bucketName = "noaa-nexrad-level2";
 		String key = "2010/01/01/KDDC/KDDC20100101_073731_V03.gz";
-		String file_output_stream = "F:\\CS\\307\\WeatherPipe\\objectgay.txt";
-
+		
+		//this format is for windows, please chanege this in your own machine
+		String filename = "F:\\CS\\307\\WeatherPipe\\"+key;
 
 		try {
 			// Download required object from S3
 			System.out.println("Downloading an object");
-			S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
-			
-			
-				//displayTextInputStream(object.getObjectContent());
-				
-				
-				/*BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-		        while (true) {
-		            String line = reader.readLine();
-		            if (line == null) break;
-		            System.out.println("    " + line);
-		        }
-		        System.out.println();
-		    }*/
-				
-
+			//S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
+			s3.getObject(
+			        new GetObjectRequest(bucketName, key),
+			        new File(filename)
+			);
+			System.out.println("The object is downloaded successfully!");
 			try {
-				// to unzip this gay object
-				System.out.println("Unzipping gay object");
+				NetcdfFile ncfile = NetcdfFile.open(filename);
+
+				//System.out.println("Description: " + ncfile.getFileTypeDescription());
+				//System.out.println("Cache Name: " + ncfile.getCacheName());
+				//System.out.println("Demension: " + ncfile.getDimensions());
 				
+				//Get the shape: length of Variable in each dimension.
+				for(int i = 0; i < ncfile.findVariable("Reflectivity").getRank();i++)
+				System.out.println("Reflectivity" + i + ": " + ncfile.findVariable("Reflectivity").getShape()[i]);
 				
-				GZIPInputStream gZIPInputStream = new GZIPInputStream(object.getObjectContent());
+				/*
+				Variable v = ncfile.findVariable("Reflectivity");
+				System.out.println(v.getSize());
+				Array data = v.read();
+				//assert data.getSize() == 360720;
+				NCdumpW.printArray(data);
+				*/
+				ncfile.close();
 
-				FileOutputStream fileOutputStream = new FileOutputStream(file_output_stream);
-
-				int bytes_read;
-
-				while ((bytes_read = gZIPInputStream.read(buffer)) > 0) {
-
-					fileOutputStream.write(buffer, 0, bytes_read);
-
-				}
-
-
-				gZIPInputStream.close();
-
-				fileOutputStream.close();
-
-
-				System.out.println("The file was decompressed successfully!");
-
-
-
-			} catch (IOException ex) {
-
-				ex.printStackTrace();
-
-			}
+			    
+				//System.out.println("Reflectivity: " + ncfile.getGlobalAttributes());
+				//System.out.println("Detial Information: " + ncfile.getDetailInfo());
+				//System.out.println("Variables: " + ncfile.getVariables());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}	
 		}
 		catch (AmazonServiceException ase) {
 			System.out.println("Caught an AmazonServiceException, which means your request made it "
@@ -126,35 +114,5 @@ public class S3_test1 {
 					+ "such as not being able to access the network.");
 			System.out.println("Error Message: " + ace.getMessage());
 		}
-		
-		
-		
-		//change the file into netcdf format
-		try {
-			NetcdfFile file = NetcdfFile.open(file_output_stream);
-			System.out.println("Description: " + file.getFileTypeDescription());
-			System.out.println("Cache Name: " + file.getCacheName());
-			System.out.println("Detial Information: " + file.getDetailInfo());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		
-		
-
 	}
-	
-	
-	private static void displayTextInputStream(InputStream input) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        while (true) {
-            String line = reader.readLine();
-            if (line == null) break;
-
-            System.out.println("    " + line);
-        }
-        System.out.println();
-    }
-	
-	
 }
