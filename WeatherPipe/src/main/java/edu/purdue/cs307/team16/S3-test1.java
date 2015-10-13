@@ -33,9 +33,6 @@ import ucar.nc2.util.cache.FileCacheable;
 
 public class S3_test1 {
 	
-	String Access_Key_ID = "AKIAIPWBEPHBGGFQG6MQ";
-	String Secret_Access_Key = "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";
-	
 	public static void main(String[] args) {
 
 		AWSCredentials credentials = null;
@@ -54,6 +51,8 @@ public class S3_test1 {
 		AmazonS3 s3 = new AmazonS3Client(credentials);
 		Region usEast1 = Region.getRegion(Regions.US_EAST_1);
 		s3.setRegion(usEast1);
+		S3Object object;
+		byte[] objectByteArray;
 
 		// Setting bucket parameters
 		String bucketName = "noaa-nexrad-level2";
@@ -66,13 +65,15 @@ public class S3_test1 {
 			// Download required object from S3
 			System.out.println("Downloading an object");
 			//S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
-			s3.getObject(
-			        new GetObjectRequest(bucketName, key),
-			        new File(filename)
-			);
+			object = s3.getObject(bucketName, key);
+			objectByteArray = IOUtils.toByteArray(object.getObjectContent());
+	//		s3.getObject(
+	//		        new GetObjectRequest(bucketName, key),
+	//		        new File(filename)
+	//		);
 			System.out.println("The object is downloaded successfully!");
 			try {
-				NetcdfFile ncfile = NetcdfFile.open(filename);
+				NetcdfFile ncfile = NetcdfFile.openInMemory("file", objectByteArray);
 
 				//System.out.println("Description: " + ncfile.getFileTypeDescription());
 				//System.out.println("Cache Name: " + ncfile.getCacheName());
