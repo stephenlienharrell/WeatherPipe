@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.UUID;
 import java.util.zip.GZIPInputStream;
@@ -33,9 +34,6 @@ import ucar.nc2.util.cache.FileCacheable;
 
 public class S3_test1 {
 	
-	String Access_Key_ID = "AKIAIPWBEPHBGGFQG6MQ";
-	String Secret_Access_Key = "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";
-	
 	public static void main(String[] args) {
 
 		AWSCredentials credentials = null;
@@ -54,25 +52,33 @@ public class S3_test1 {
 		AmazonS3 s3 = new AmazonS3Client(credentials);
 		Region usEast1 = Region.getRegion(Regions.US_EAST_1);
 		s3.setRegion(usEast1);
+		S3Object object;
+		byte[] buf = new byte[1024];
+		int len;
+		GZIPInputStream gunzip;
+		ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
 
 		// Setting bucket parameters
 		String bucketName = "noaa-nexrad-level2";
 		String key = "2010/01/01/KDDC/KDDC20100101_073731_V03.gz";
 		
 		//this format is for windows, please chanege this in your own machine
-		String filename = "F:\\CS\\307\\WeatherPipe\\"+key;
-
 		try {
 			// Download required object from S3
 			System.out.println("Downloading an object");
 			//S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
-			s3.getObject(
-			        new GetObjectRequest(bucketName, key),
-			        new File(filename)
-			);
+			object = s3.getObject(bucketName, key);
+			gunzip = new GZIPInputStream(object.getObjectContent());
+
+			while((len = gunzip.read(buf)) != -1){
+				byteArrayStream.write(buf, 0, len);
+			}
+			
+			
+			
 			System.out.println("The object is downloaded successfully!");
 			try {
-				NetcdfFile ncfile = NetcdfFile.open(filename);
+				NetcdfFile ncfile = NetcdfFile.openInMemory(key, byteArrayStream.toByteArray());
 
 				//System.out.println("Description: " + ncfile.getFileTypeDescription());
 				//System.out.println("Cache Name: " + ncfile.getCacheName());
@@ -98,6 +104,9 @@ public class S3_test1 {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
+		}
+		catch (IOException ioe) {
+			System.out.println(ioe);
 		}
 		catch (AmazonServiceException ase) {
 			System.out.println("Caught an AmazonServiceException, which means your request made it "
