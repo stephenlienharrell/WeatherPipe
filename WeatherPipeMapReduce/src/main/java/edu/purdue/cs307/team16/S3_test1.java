@@ -1,16 +1,7 @@
 package edu.purdue.cs307.team16;
 
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 
 import com.amazonaws.AmazonClientException;
@@ -21,17 +12,10 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.util.IOUtils;
 
-import ucar.ma2.Array;
-import ucar.nc2.NCdumpW;
 import ucar.nc2.NetcdfFile;
-import ucar.nc2.Variable;
-import ucar.nc2.dataset.NetcdfDataset;
-import ucar.nc2.util.cache.FileCacheable;
+
 
 // goal: to be able to read data from s3
 

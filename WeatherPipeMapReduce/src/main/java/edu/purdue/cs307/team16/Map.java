@@ -1,7 +1,7 @@
 package edu.purdue.cs307.team16;
 
 import java.io.IOException;
-import java.util.*;
+
 
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
