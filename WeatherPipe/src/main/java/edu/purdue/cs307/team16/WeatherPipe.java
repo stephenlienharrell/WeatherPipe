@@ -1,7 +1,6 @@
 package edu.purdue.cs307.team16;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.commons.cli.Options;
@@ -31,7 +30,11 @@ public class WeatherPipe {
 		 ArrayList<String> radarFileNames;
 		 final String jobID = UUID.randomUUID().toString();
 		 AwsHelpers awsHelpers = new AwsHelpers(jobID); 
-	
+		 String jobHadoopJarURL, jobInputURL;
+		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this
+		 String instanceType = "c3.xlarge"; //Make this a flag
+		 int instanceCount = 1; // Make this a flag
+		 
 		 // create Options object
 		 Options options = new Options();
 		 CommandLineParser parser = new DefaultParser();
@@ -71,12 +74,12 @@ public class WeatherPipe {
 		 
 
 		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, awsHelpers, dataBucket);
-		 System.out.println(Arrays.toString(radarFileNames.toArray()));
+		// System.out.println(Arrays.toString(radarFileNames.toArray()));
 		 
 		 awsHelpers.FindOrCreateWeatherPipeJobBucket();
-		 awsHelpers.UploadInputFileList(radarFileNames, dataBucket);
-
-			
+		 jobInputURL = awsHelpers.UploadInputFileList(radarFileNames, dataBucket);
+		 jobHadoopJarURL = awsHelpers.UploadMPJarFile(hadoopJarFileName);
+		 awsHelpers.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 	
 	}
 }

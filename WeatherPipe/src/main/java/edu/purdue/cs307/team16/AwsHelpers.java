@@ -1,6 +1,7 @@
 package edu.purdue.cs307.team16;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -141,7 +142,8 @@ public class AwsHelpers {
 	
 	public String UploadMPJarFile(String fileLocation) {
 		String key = jobID + "WeatherPipeMapreduce.jar";
-		s3client.putObject(new PutObjectRequest(jobBucketName, key, fileLocation));
+		File jarFile = new File(fileLocation);
+		s3client.putObject(new PutObjectRequest(jobBucketName, key, jarFile));
 		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
@@ -150,7 +152,9 @@ public class AwsHelpers {
 		
 		// Modified from https://mpouttuclarke.wordpress.com/2011/06/24/how-to-run-an-elastic-mapreduce-job-using-the-java-sdk/
 		
-		String hadoopVersion = "2.6.0";
+		// first run aws emr create-default-roles
+		
+		String hadoopVersion = "2.4.0";
 		String flowName = "WeatherPipe_" + jobID;
 		String logS3Location = "s3n://" + jobBucketName+ "/" + jobID + ".log";
 		String[] arguments = new String[] {jobInputS3Location};
@@ -163,7 +167,7 @@ public class AwsHelpers {
         try {
             // Configure instances to use
             JobFlowInstancesConfig instances = new JobFlowInstancesConfig();
-//            System.out.println("Using EMR Hadoop v" + hadoopVersion);
+            System.out.println("Using EMR Hadoop v" + hadoopVersion);
             instances.setHadoopVersion(hadoopVersion);
             System.out.println("Using instance count: " + numInstances);
             instances.setInstanceCount(numInstances);
@@ -173,16 +177,19 @@ public class AwsHelpers {
             // do these need to be different??
             System.out.println("Using slave instance type: " + instanceType);
             instances.setSlaveInstanceType(instanceType);
+            
 
             // Configure the job flow
             System.out.println("Configuring flow: " + flowName);
             RunJobFlowRequest request = new RunJobFlowRequest(flowName, instances);
             System.out.println("\tusing log URI: " + logS3Location);
             request.setLogUri(logS3Location);
-            
+            request.setServiceRole("EMR_DefaultRole");
+            request.setAmiVersion("3.1.0");
+            // this may change for some people
             
       
-            request.setJobFlowRole("EMRJobflowDefault");
+            //request.setJobFlowRole("EMRJobflowDefault");
 
             // Configure the Hadoop jar to use
             System.out.println("\tusing jar URI: " + jobJarS3Location);
