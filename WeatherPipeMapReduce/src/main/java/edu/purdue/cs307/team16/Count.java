@@ -1,3 +1,5 @@
+package edu.purdue.cs307.team16;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.io.*;
