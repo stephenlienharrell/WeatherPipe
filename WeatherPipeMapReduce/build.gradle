@@ -20,4 +20,4 @@ dependencies {
 }
 
 
-
+apply plugin: 'eclipse'
