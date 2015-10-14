@@ -1,3 +1,5 @@
+package edu.purdue.cs307.team16;
+
 /*
  * Copyright 2010-2012 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -19,7 +21,7 @@ import java.util.Set;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.PropertiesCredentials;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeAvailabilityZonesResult;
@@ -87,8 +89,9 @@ public class AwsConsoleApp {
      * @see com.amazonaws.ClientConfiguration
      */
     private static void init() throws Exception {
-        AWSCredentials credentials = new PropertiesCredentials(
-                AwsConsoleApp.class.getResourceAsStream("AwsCredentials.properties"));
+	AWSCredentials credentials = new ProfileCredentialsProvider().getCredentials();
+        // AWSCredentials credentials = new PropertiesCredentials(
+        //        AwsConsoleApp.class.getResourceAsStream("AwsCredentials.properties"));
 
         ec2 = new AmazonEC2Client(credentials);
         s3  = new AmazonS3Client(credentials);

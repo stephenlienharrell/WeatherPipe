@@ -1,15 +1,12 @@
+package edu.purdue.cs307.team16;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.io.IOException;
-import java.lang.*;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.ec2.model.InstanceType;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
@@ -33,7 +30,7 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 public class ElasticMapReduceApp
 {
 
-    private static final String HADOOP_VERSION = "0.20";
+    private static final String HADOOP_VERSION = "1.0.3";
     private static final int INSTANCE_COUNT = 1;
     private static final String INSTANCE_TYPE = InstanceType.M1Large.toString();
     private static final UUID RANDOM_UUID = UUID.randomUUID();
@@ -65,9 +62,11 @@ public class ElasticMapReduceApp
      * @see com.amazonaws.ClientConfiguration
      */
     private static void init() throws Exception {
-        AWSCredentials credentials = new PropertiesCredentials(
-                                      AwsConsoleApp.class
-                                          .getResourceAsStream("AwsCredentials.properties"));
+	AWSCredentials credentials = new ProfileCredentialsProvider().getCredentials();
+
+        //AWSCredentials credentials = new PropertiesCredentials(
+        //                              AwsConsoleApp.class
+        //                                  .getResourceAsStream("AwsCredentials.properties"));
 
         emr = new AmazonElasticMapReduceClient(credentials);
     }

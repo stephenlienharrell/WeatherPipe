@@ -1,6 +1,7 @@
 package edu.purdue.cs307.team16;
 
 import java.util.ArrayList;
+import java.util.Arrays; 
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -64,7 +65,7 @@ public class WeatherPipe {
 		 }
 
 		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, RadarFilePicker.getS3());
-		 // send DateTime objects to s3 file lister
+		 System.out.println(Arrays.toString(radarFileNames.toArray()));
 		 // send list of files to emr starter
 			
 	
