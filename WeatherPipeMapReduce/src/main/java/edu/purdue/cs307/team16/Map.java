@@ -16,7 +16,10 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 
+import ucar.ma2.Array;
+import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
+
 
 /*
     Input is of the form:
@@ -42,6 +45,7 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 		int dataPoint = -1;
 		byte[] buf = new byte[1024];
 		int len;
+		byte dataByte = -1;
 		GZIPInputStream gunzip;
 		ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
 
@@ -81,7 +85,13 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 				//assert data.getSize() == 360720;
 				NCdumpW.printArray(data);
 				*/
-				dataPoint = ncfile.findVariable("Reflectivity").getShape()[0];
+				
+				
+				// SHAPE is 3, 360, 324
+				Array data = ncfile.findVariable("Reflectivity").read();
+				Index dataIndex = data.getIndex();
+				dataIndex.set(0,0,0);
+				dataByte = data.getByte(dataIndex);
 				ncfile.close();
 
 			    
@@ -112,14 +122,10 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 		}
         
         
-        
-        // load file from s3 based on the bucket/key name
-        // load it in to netcdf
-        // grab a simple data piece
-        // we will set word to be the key, and one will be set to the data point we pulled
         try {
             word.set(key);
-            data.set(dataPoint);
+            assert(dataByte >= 0);
+            data.set(dataByte);
             context.write(word, data);
         }
         catch (Exception e) {

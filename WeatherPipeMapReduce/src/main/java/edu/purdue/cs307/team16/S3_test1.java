@@ -14,6 +14,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 
+import ucar.ma2.Array;
+import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
 
 
@@ -74,6 +76,18 @@ public class S3_test1 {
 				//Get the shape: length of Variable in each dimension.
 				for(int i = 0; i < ncfile.findVariable("Reflectivity").getRank();i++)
 				System.out.println("Reflectivity" + i + ": " + ncfile.findVariable("Reflectivity").getShape()[i]);
+				
+				System.out.println(ncfile.findVariable("Reflectivity").getDataType().toString());
+				Array data = ncfile.findVariable("Reflectivity").read();
+				Index dataIndex = data.getIndex();
+				dataIndex.set(0,0,0);
+				byte dataByte = data.getByte(dataIndex);
+//				int i = 0;
+//				while(data.hasNext()) {
+//					System.out.println(data.next() + " " + i);
+//					i++;
+//				}
+				System.out.println(dataByte);
 				
 				/*
 				Variable v = ncfile.findVariable("Reflectivity");

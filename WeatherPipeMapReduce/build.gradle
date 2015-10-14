@@ -3,6 +3,8 @@
 // https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/reference/netcdf4Clibrary.html
 
 apply plugin: 'java'
+//apply plugin: 'application'
+//mainClassName = "edu.purdue.cs307.team16.S3_test1"
 
 repositories {
     mavenCentral()
