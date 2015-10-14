@@ -7,19 +7,30 @@ import org.apache.hadoop.mapreduce.*;
 
 public class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {	
 
+	public long runningSum;
+	public int numberOfDataPoints = 0;
+	
+	
     public void reduce(Text keyname, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
         
-
-        int sum = 0;
+    	
+    	// add data to runningSum and increment number of data points
+    	// for the average
+   
         for (IntWritable val : values) {
-            sum += val.get();
+            runningSum += val.get();
+            numberOfDataPoints++;
         }
 
-        try {
-        	context.write(keyname, new IntWritable(sum));
-        }
-        catch (Exception E) {
-        	// Send signal
-        }
+    }
+    // use cleanup to do final sum average
+
+    public void clean(Context context) {
+    
+    	long average = runningSum/numberOfDataPoints;
+  
+    	System.out.println("Average of data points is: " + average);
+    	// write out json file
+
     }
 }

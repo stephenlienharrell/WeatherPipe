@@ -18,7 +18,7 @@ public class Count {
 	public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         
-        Job job = Job.getInstance(conf);
+        Job job = Job.getInstance(conf, "Count");
         job.setJarByClass(Count.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
