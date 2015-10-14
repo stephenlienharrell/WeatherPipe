@@ -157,7 +157,7 @@ public class AwsHelpers {
 		String hadoopVersion = "2.4.0";
 		String flowName = "WeatherPipe_" + jobID;
 		String logS3Location = "s3n://" + jobBucketName+ "/" + jobID + ".log";
-		String[] arguments = new String[] {jobInputS3Location};
+		String[] arguments = new String[] {jobInputS3Location, jobID + "_output"};
 		List<String> jobArguments = Arrays.asList(arguments);
 		
 		List<JobFlowExecutionState> DONE_STATES = Arrays.asList(new JobFlowExecutionState[] { JobFlowExecutionState.COMPLETED,
@@ -189,9 +189,8 @@ public class AwsHelpers {
             // this may change for some people
             
       
-            //request.setJobFlowRole("EMRJobflowDefault");
+            request.setJobFlowRole("EMR_EC2_DefaultRole");
 
-            // Configure the Hadoop jar to use
             System.out.println("\tusing jar URI: " + jobJarS3Location);
             HadoopJarStepConfig jarConfig = new HadoopJarStepConfig(jobJarS3Location);
             System.out.println("\tusing args: " + jobArguments);
