@@ -23,8 +23,12 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 
     public void map(Text bucketname, Text keyname, Context context) throws IOException, InterruptedException {
     	
+    
         String key = keyname.toString();
-        
+        // load file from s3 based on the bucket/key name
+        // load it in to netcdf
+        // grab a simple data piece
+        // we will set word to be the key, and one will be set to the data point we pulled
         try {
             word.set(key);
             one.set(1);
