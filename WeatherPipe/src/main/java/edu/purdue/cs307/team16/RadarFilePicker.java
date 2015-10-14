@@ -1,12 +1,12 @@
 package edu.purdue.cs307.team16;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.joda.time.DateTime;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import edu.purdue.cs307.team16.AwsHelpers;
@@ -15,14 +15,15 @@ import edu.purdue.cs307.team16.AwsHelpers;
 public class RadarFilePicker {
 	
 
-	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, AwsHelpers awsHelpers){
+	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, AwsHelpers awsHelpers, String dataBucket){
 	
-		
 		String lowBound = start.toString("yyyyMMdd_hhmmss");
 		String uppBound = end.toString("yyyyMMdd_hhmmss");
 		
-		String bucketName = "noaa-nexrad-level2";
-		// String key = "1991/01/01/";
+		
+		String key = "2010/01/01/";
+		// need to generate list of buckets to list by enumerating
+		// all days between the two times
 		
 		
 		ArrayList<String> ret = new ArrayList<String>();
@@ -45,12 +46,14 @@ public class RadarFilePicker {
 		
 		try {
 			
-			ObjectListing objectListing = awsHelpers.ListBucket(bucketName);
-			for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+			List<S3ObjectSummary> summaries = awsHelpers.ListBucket(dataBucket, key);
+			for (S3ObjectSummary objectSummary : summaries) {
+
 				index = objectSummary.getKey().indexOf('.');
 				if(objectSummary.getKey().substring(index+1, index+3).compareTo("gz") != 0)
 					continue;	//skip the key with other format.
 				
+		//		System.out.println(objectSummary.getKey());
 				index = objectSummary.getKey().indexOf('_');
 				
 				compDate = objectSummary.getKey().substring(index-8, index);	//the current object's date
@@ -62,7 +65,7 @@ public class RadarFilePicker {
 				
 				if(compInt1 <= 0 && compInt2 >= 0) {
 					if(compInt3 <= 0 && compInt4 >= 0){
-						format = "(" + bucketName + ", " + objectSummary.getKey() + ")";
+						format = objectSummary.getKey();
 						ret.add(format);
 					}
 					//(bucketname, key)

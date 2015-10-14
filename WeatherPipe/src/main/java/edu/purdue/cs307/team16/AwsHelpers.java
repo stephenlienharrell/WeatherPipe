@@ -29,16 +29,16 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetBucketLocationRequest;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 
 public class AwsHelpers {
 
 
-	private String jobBucketName = "WeatherPipe";
+	private String jobBucketName = "weatherpipe";
 	private String jobID;
 	private AmazonElasticMapReduce emrClient;
 	private AmazonS3 s3client;
@@ -69,8 +69,17 @@ public class AwsHelpers {
 		jobID = job;
 	}
 	
-	public ObjectListing ListBucket(String bucketName) {
-		return s3client.listObjects(new ListObjectsRequest().withBucketName(bucketName));
+	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
+		
+		ObjectListing listing = s3client.listObjects( bucketName, key );
+		List<S3ObjectSummary> summaries = listing.getObjectSummaries();
+
+		while (listing.isTruncated()) {
+		   listing = s3client.listNextBatchOfObjects (listing);
+		   summaries.addAll (listing.getObjectSummaries());
+		}
+		
+		return summaries;
 	}
 	
 	public String FindOrCreateWeatherPipeJobBucket() {
@@ -121,7 +130,7 @@ public class AwsHelpers {
 			uploadFileString += dataBucketName + " " + s + "\n";
 		}
 		
-		uploadFileStream = new ByteArrayInputStream(uploadFileString.getBytes(Charset.forName("US_ASCII")));
+		uploadFileStream = new ByteArrayInputStream(uploadFileString.getBytes(Charset.forName("UTF-8")));
 		
 		// may need to set content size
 		objMeta.setContentType("text/plain");

@@ -21,7 +21,7 @@ import edu.purdue.cs307.team16.RadarFilePicker;
 public class WeatherPipe {
 
 	public static void main(String[] args) {
-
+		 final String dataBucket = "noaa-nexrad-level2";
 		 final String dateFormatString = "dd/MM/yyyy HH:mm:ss";
 		 final String dateDesc = "Date Format is " + dateFormatString;
 		 final DateTimeFormatter dateFormat = DateTimeFormat.forPattern(
@@ -35,19 +35,19 @@ public class WeatherPipe {
 		 // create Options object
 		 Options options = new Options();
 		 CommandLineParser parser = new DefaultParser();
-		
-
 		 
 	     // add options for jar file and radar station if time is available
-		 options.addOption("start_time", true, "Start time of analysis. " + dateDesc);
-		 options.addOption("end_time", true, "End time of analysis. " + dateDesc);
+		 options.addOption("s", "start_time", true, "Start time of analysis. " + dateDesc);
+		 options.addOption("e", "end_time", true, "End time of analysis. " + dateDesc);
 		 
 		 try {
 			 // parse the command line arguments
 			 CommandLine line = parser.parse( options, args );
+			 
+			 System.out.println(line.getOptionValue("start_time") + " " + line.getOptionValue("end_time"));
 		 
-			 if( line.hasOption( "start_time" ) ||
-					 (line.getOptionValue("start_time")== null) ) {
+			 if( line.hasOption( "start_time" ) &&
+					 (line.getOptionValue("start_time") != null) ) {
 				startTime = DateTime.parse(
 					line.getOptionValue("start_time"), 
 					dateFormat);
@@ -70,11 +70,12 @@ public class WeatherPipe {
 		 
 		 
 
-		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, awsHelpers);
+		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, awsHelpers, dataBucket);
 		 System.out.println(Arrays.toString(radarFileNames.toArray()));
 		 
-		 
-		 // send list of files to emr starter
+		 awsHelpers.FindOrCreateWeatherPipeJobBucket();
+		 awsHelpers.UploadInputFileList(radarFileNames, dataBucket);
+
 			
 	
 	}
