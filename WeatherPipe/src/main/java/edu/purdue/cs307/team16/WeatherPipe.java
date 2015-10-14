@@ -1,7 +1,8 @@
 package edu.purdue.cs307.team16;
 
 import java.util.ArrayList;
-import java.util.Arrays; 
+import java.util.Arrays;
+import java.util.UUID;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -28,6 +29,8 @@ public class WeatherPipe {
 		 DateTime startTime = null;
 		 DateTime endTime = null;
 		 ArrayList<String> radarFileNames;
+		 final String jobID = UUID.randomUUID().toString();
+		 AwsHelpers awsHelpers = new AwsHelpers(jobID); 
 	
 		 // create Options object
 		 Options options = new Options();
@@ -35,7 +38,7 @@ public class WeatherPipe {
 		
 
 		 
-		 // add t option
+	     // add options for jar file and radar station if time is available
 		 options.addOption("start_time", true, "Start time of analysis. " + dateDesc);
 		 options.addOption("end_time", true, "End time of analysis. " + dateDesc);
 		 
@@ -43,7 +46,8 @@ public class WeatherPipe {
 			 // parse the command line arguments
 			 CommandLine line = parser.parse( options, args );
 		 
-			 if( line.hasOption( "start_time" ) ) {
+			 if( line.hasOption( "start_time" ) ||
+					 (line.getOptionValue("start_time")== null) ) {
 				startTime = DateTime.parse(
 					line.getOptionValue("start_time"), 
 					dateFormat);
@@ -63,9 +67,13 @@ public class WeatherPipe {
 		 } catch( ParseException exp ) {
 			 System.out.println( "Unexpected exception:" + exp.getMessage() );
 		 }
+		 
+		 
 
-		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, RadarFilePicker.getS3());
+		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, awsHelpers);
 		 System.out.println(Arrays.toString(radarFileNames.toArray()));
+		 
+		 
 		 // send list of files to emr starter
 			
 	

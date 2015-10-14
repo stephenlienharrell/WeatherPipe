@@ -6,44 +6,24 @@ import org.joda.time.DateTime;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+
+import edu.purdue.cs307.team16.AwsHelpers;
 
 
 public class RadarFilePicker {
 	
-	//Get input from the user
 
-	// this should move to AWS library later
-	public static AmazonS3 getS3() {
-		AWSCredentials credentials = null;
-		try {
-			credentials = new ProfileCredentialsProvider("default").getCredentials();
-		} catch (Exception e) {
-			throw new AmazonClientException(
-											"Cannot load the credentials from the credential profiles file. " +
-											"Please make sure that your credentials file is at the correct " +
-											"location (/Users/Hanqi/.aws/credentials), and is in valid format.",
-											e);
-		}
-		return new AmazonS3Client(credentials);
-	}
-
-	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, AmazonS3 s3){
+	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, AwsHelpers awsHelpers){
+	
+		
 		String lowBound = start.toString("yyyyMMdd_hhmmss");
 		String uppBound = end.toString("yyyyMMdd_hhmmss");
-		Region awsRegion = Region.getRegion(Regions.US_EAST_1);
-		s3.setRegion(awsRegion);
 		
 		String bucketName = "noaa-nexrad-level2";
 		// String key = "1991/01/01/";
+		
 		
 		ArrayList<String> ret = new ArrayList<String>();
 		String[] arr1 = new String[2];	//arr1[0] = the date of the lower bound, [1] = the time of the lower bound
@@ -65,7 +45,7 @@ public class RadarFilePicker {
 		
 		try {
 			
-			ObjectListing objectListing = s3.listObjects(new ListObjectsRequest().withBucketName(bucketName));
+			ObjectListing objectListing = awsHelpers.ListBucket(bucketName);
 			for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
 				index = objectSummary.getKey().indexOf('.');
 				if(objectSummary.getKey().substring(index+1, index+3).compareTo("gz") != 0)
