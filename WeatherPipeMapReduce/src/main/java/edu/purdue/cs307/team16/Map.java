@@ -4,6 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
@@ -42,16 +45,24 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 		Region usEast1 = Region.getRegion(Regions.US_EAST_1);
 		s3.setRegion(usEast1);
 		S3Object object;
-		int dataPoint = -1;
 		byte[] buf = new byte[1024];
 		int len;
+		Array dataArray;
+		Index dataIndex;
 		byte dataByte = -1;
 		GZIPInputStream gunzip;
 		ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
+		Level level;
+		Logger logger;
+		
 
+		//log4j stuff
+		BasicConfigurator.configure();
+		level = Level.OFF;
+		logger = org.apache.log4j.Logger.getRootLogger();
+		logger.setLevel(level);
+		
 		// Setting bucket parameters
-		
-		
 	    String bucketName = bucket.toString();
         String key = keyname.toString();
        
@@ -61,7 +72,7 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 		//this format is for windows, please chanege this in your own machine
 		try {
 			// Download required object from S3
-			System.out.println("Downloading an object");
+			// System.out.println("Downloading an object");
 			//S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
 			object = s3.getObject(bucketName, key);
 			gunzip = new GZIPInputStream(object.getObjectContent());
@@ -70,7 +81,7 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 				byteArrayStream.write(buf, 0, len);
 			}
 			
-			System.out.println("The object is downloaded successfully!");
+			// System.out.println("The object is downloaded successfully!");
 			try {
 				NetcdfFile ncfile = NetcdfFile.openInMemory(key, byteArrayStream.toByteArray());
 				
@@ -88,10 +99,10 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 				
 				
 				// SHAPE is 3, 360, 324
-				Array data = ncfile.findVariable("Reflectivity").read();
-				Index dataIndex = data.getIndex();
+				dataArray = ncfile.findVariable("Reflectivity").read();
+				dataIndex = dataArray.getIndex();
 				dataIndex.set(0,0,0);
-				dataByte = data.getByte(dataIndex);
+				dataByte = dataArray.getByte(dataIndex);
 				ncfile.close();
 
 			    
