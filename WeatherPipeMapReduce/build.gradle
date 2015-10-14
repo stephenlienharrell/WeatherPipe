@@ -17,8 +17,8 @@ dependencies {
    compile 'com.amazonaws:aws-java-sdk:1.10.26'
    compile 'org.apache.logging.log4j:log4j-core:2.4'
    compile 'edu.ucar:netcdf4:4.4.2'
-   compile 'org.apache.hadoop:hadoop-common:2.6.0'
-   compile 'org.apache.hadoop:hadoop-mapreduce-client-core:2.6.0'
+   compile 'org.apache.hadoop:hadoop-common:2.4.0'
+   compile 'org.apache.hadoop:hadoop-mapreduce-client-core:2.4.0'
 }
 
 
