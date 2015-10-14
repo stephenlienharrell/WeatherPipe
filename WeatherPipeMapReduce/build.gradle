@@ -3,8 +3,7 @@
 // https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/reference/netcdf4Clibrary.html
 
 apply plugin: 'java'
-//apply plugin: 'application'
-//mainClassName = "edu.purdue.cs307.team16.S3_test1"
+//mainClassName = "edu.purdue.cs307.team16.Count"
 
 repositories {
     mavenCentral()
@@ -12,6 +11,11 @@ repositories {
         url "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/"
     }
 }
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+
 
 dependencies {
    compile 'com.amazonaws:aws-java-sdk:1.10.26'
@@ -22,4 +26,11 @@ dependencies {
 }
 
 
+jar {
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+
+    manifest {
+        attributes 'Main-Class': "edu.purdue.cs307.team16.Count"
+    }
+}
 apply plugin: 'eclipse'
