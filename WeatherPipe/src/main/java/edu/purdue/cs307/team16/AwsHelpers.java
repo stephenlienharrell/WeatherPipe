@@ -2,6 +2,7 @@ package edu.purdue.cs307.team16;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.input.ReversedLinesFileReader;
+import org.json.JSONObject;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -35,8 +37,6 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 
@@ -168,10 +168,10 @@ public class AwsHelpers {
 		DescribeClusterResult describeClusterResult;
 		File errorLog = new File("WeatherPipeLog" + jobID + ".log");
 		File outputFile = new File("WeatherPipeOut" + jobID + ".out");
-		S3Object s3obj;
-		S3ObjectInputStream s3objInStrm;
 		ReversedLinesFileReader revLineRead;
 		String finalAverage;
+		JSONObject jsonObj = new JSONObject();
+		FileWriter fileWriter; 
 		
         try {
             // Configure instances to use
@@ -219,7 +219,7 @@ public class AwsHelpers {
             
             //Check the status of the running job
             String lastState = "";
-            STATUS_LOOP: while (true)
+            while (true)
             {
             	Thread.sleep(10000);
             	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
@@ -236,8 +236,15 @@ public class AwsHelpers {
             		System.out.println("The job has ended and output has been downloaded");
     
             		revLineRead = new ReversedLinesFileReader(outputFile, 4096, Charset.forName("UTF-8"));
+            //		System.out.println("First Line: " + revLineRead.readLine());
             		finalAverage = revLineRead.readLine();
-            		// convert this to json and profit!!
+            //		System.out.println("Second Line: " + finalAverage.split("\\t")[0]);
+            		
+            		jsonObj.put(finalAverage.split("\\t")[0], finalAverage.split("\\t")[1]);
+            		fileWriter = new FileWriter(outputFile);
+            		fileWriter.write(jsonObj.toString() + "\n");
+            		fileWriter.flush();
+            		fileWriter.close();
             		break;
             	}
             	System.out.println("The job has ended with errors, please check the log");
