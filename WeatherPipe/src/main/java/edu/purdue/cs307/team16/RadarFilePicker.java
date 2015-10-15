@@ -15,7 +15,7 @@ import edu.purdue.cs307.team16.AwsHelpers;
 public class RadarFilePicker {
 	
 
-	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, AwsHelpers awsHelpers, String dataBucket){
+	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, AwsHelpers awsHelpers, String dataBucket){
 	
 		String lowBound = start.toString("yyyyMMdd_hhmmss");
 		String uppBound = end.toString("yyyyMMdd_hhmmss");
@@ -43,6 +43,7 @@ public class RadarFilePicker {
 		String compDate;	//substring(date) of a file name
 		String compTime;	//substring(time) of a file name
 		String format;		//used for a file name in a format we need.
+		int stationLen = station.length();
 		
 		try {
 			
@@ -55,6 +56,11 @@ public class RadarFilePicker {
 				
 		//		System.out.println(objectSummary.getKey());
 				index = objectSummary.getKey().indexOf('_');
+				
+				if(objectSummary.getKey().charAt(index-9-stationLen) != '/' || objectSummary.getKey().substring(index-8-stationLen, index-8).compareTo(station) != 0) {
+					continue;	//if the station is not the one we need to find, just skip this object.
+				}
+
 				
 				compDate = objectSummary.getKey().substring(index-8, index);	//the current object's date
 				compTime = objectSummary.getKey().substring(index+1, index+7);	//the current object's time
