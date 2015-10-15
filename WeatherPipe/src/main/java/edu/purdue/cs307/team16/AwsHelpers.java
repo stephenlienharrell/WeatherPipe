@@ -2,12 +2,14 @@ package edu.purdue.cs307.team16;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
+
+import org.apache.commons.io.input.ReversedLinesFileReader;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -17,11 +19,10 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
-import com.amazonaws.services.elasticmapreduce.model.DescribeJobFlowsRequest;
-import com.amazonaws.services.elasticmapreduce.model.DescribeJobFlowsResult;
+import com.amazonaws.services.elasticmapreduce.model.Cluster;
+import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
+import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
-import com.amazonaws.services.elasticmapreduce.model.JobFlowDetail;
-import com.amazonaws.services.elasticmapreduce.model.JobFlowExecutionState;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowResult;
@@ -30,9 +31,12 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetBucketLocationRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 
@@ -156,13 +160,18 @@ public class AwsHelpers {
 		
 		String hadoopVersion = "2.4.0";
 		String flowName = "WeatherPipe_" + jobID;
-		String logS3Location = "s3n://" + jobBucketName+ "/" + jobID + ".log";
-		String[] arguments = new String[] {jobInputS3Location, jobID + "_output"};
+		String logS3Location = "s3n://" + jobBucketName + "/" + jobID + ".log";
+		String outS3Location = "s3n://" + jobBucketName + "/" + jobID + "_output";
+		String[] arguments = new String[] {jobInputS3Location, outS3Location};
 		List<String> jobArguments = Arrays.asList(arguments);
-		
-		List<JobFlowExecutionState> DONE_STATES = Arrays.asList(new JobFlowExecutionState[] { JobFlowExecutionState.COMPLETED,
-                JobFlowExecutionState.FAILED,
-                JobFlowExecutionState.TERMINATED });
+		DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest();
+		DescribeClusterResult describeClusterResult;
+		File errorLog = new File("WeatherPipeLog" + jobID + ".log");
+		File outputFile = new File("WeatherPipeOut" + jobID + ".out");
+		S3Object s3obj;
+		S3ObjectInputStream s3objInStrm;
+		ReversedLinesFileReader revLineRead;
+		String finalAverage;
 		
         try {
             // Configure instances to use
@@ -204,31 +213,38 @@ public class AwsHelpers {
             //Run the job flow
             RunJobFlowResult result = emrClient.runJobFlow(request);
             System.out.println("Trying to run job flow!\n");
+     
+            describeClusterRequest.setClusterId(result.getJobFlowId());
+            
             
             //Check the status of the running job
             String lastState = "";
             STATUS_LOOP: while (true)
             {
-                DescribeJobFlowsRequest desc =
-                    new DescribeJobFlowsRequest(
-                                                Arrays.asList(new String[] { result.getJobFlowId() }));
-                DescribeJobFlowsResult descResult = emrClient.describeJobFlows(desc);
-                for (JobFlowDetail detail : descResult.getJobFlows())
-                {
-                    String state = detail.getExecutionStatusDetail().getState();
-                    JobFlowExecutionState detailState = JobFlowExecutionState.fromValue(state);
-                    if (DONE_STATES.contains(detailState))
-                    {
-                        System.out.println("Job " + state + ": " + detail.toString());
-                        break STATUS_LOOP;
-                    }
-                    else if (!lastState.equals(state))
-                    {
-                        lastState = state;
-                        System.out.println("Job " + state + " at " + new Date().toString());
-                    }
-                }
-                Thread.sleep(10000);
+            	Thread.sleep(10000);
+            	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
+            	Cluster cluster = describeClusterResult.getCluster();
+            	lastState = cluster.getStatus().getState();
+            	System.out.println("Current State of Cluster: " + lastState);
+            	if(!lastState.startsWith("TERMINATED")) {
+            		continue;
+            	}
+           // 	s3client.getObject(new GetObjectRequest(jobBucketName, jobID + ".log"), errorLog);
+            	if(!lastState.endsWith("ERRORS")) {	
+            		
+            		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), outputFile);
+            		System.out.println("The job has ended and output has been downloaded");
+    
+            		revLineRead = new ReversedLinesFileReader(outputFile, 4096, Charset.forName("UTF-8"));
+            		finalAverage = revLineRead.readLine();
+            		// convert this to json and profit!!
+            		break;
+            	}
+            	System.out.println("The job has ended with errors, please check the log");
+            	
+            	
+            	break;
+                
             }
         } catch (AmazonServiceException ase) {
                 System.out.println("Caught Exception: " + ase.getMessage());
@@ -238,8 +254,11 @@ public class AwsHelpers {
         } catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-        
+       
         
     }
 	
