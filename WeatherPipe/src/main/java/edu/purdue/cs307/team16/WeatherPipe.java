@@ -40,7 +40,7 @@ public class WeatherPipe {
 		 CommandLineParser parser = new DefaultParser();
 		 
 	     // add options for jar file and radar station if time is available
-		 String station = "KBBX";
+		 String station = "KAKQ";
 		 options.addOption("s", "start_time", true, "Start time of analysis. " + dateDesc);
 		 options.addOption("e", "end_time", true, "End time of analysis. " + dateDesc);
 		 
@@ -48,7 +48,7 @@ public class WeatherPipe {
 			 // parse the command line arguments
 			 CommandLine line = parser.parse( options, args );
 			 
-			 System.out.println(line.getOptionValue("start_time") + " " + line.getOptionValue("end_time"));
+			 //System.out.println(line.getOptionValue("start_time") + " " + line.getOptionValue("end_time"));
 		 
 			 if( line.hasOption( "start_time" ) &&
 					 (line.getOptionValue("start_time") != null) ) {
