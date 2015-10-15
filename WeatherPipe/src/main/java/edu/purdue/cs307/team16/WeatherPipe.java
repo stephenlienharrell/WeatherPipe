@@ -40,6 +40,7 @@ public class WeatherPipe {
 		 CommandLineParser parser = new DefaultParser();
 		 
 	     // add options for jar file and radar station if time is available
+		 String station = "KBBX";
 		 options.addOption("s", "start_time", true, "Start time of analysis. " + dateDesc);
 		 options.addOption("e", "end_time", true, "End time of analysis. " + dateDesc);
 		 
@@ -73,7 +74,7 @@ public class WeatherPipe {
 		 
 		 
 
-		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, awsHelpers, dataBucket);
+		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsHelpers, dataBucket);
 		// System.out.println(Arrays.toString(radarFileNames.toArray()));
 		 
 		 awsHelpers.FindOrCreateWeatherPipeJobBucket();
