@@ -33,13 +33,13 @@ import ucar.nc2.NetcdfFile;
     At this point, I assume they are in the same bucket. 
 */
 
-public class Map extends Mapper<Text, Text, Text, IntWritable> {
+public class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
 	
-    private final static IntWritable data = new IntWritable(1);
+    private IntWritable data = new IntWritable(1);
     private Text word = new Text();
     
 
-    public void map(Text bucket, Text keyname, Context context) throws IOException, InterruptedException {
+    public void map(LongWritable l, Text keyname, Context context) throws IOException, InterruptedException {
     	
 		AmazonS3 s3 = new AmazonS3Client(new AnonymousAWSCredentials());
 		Region usEast1 = Region.getRegion(Regions.US_EAST_1);
@@ -63,8 +63,9 @@ public class Map extends Mapper<Text, Text, Text, IntWritable> {
 		logger.setLevel(level);
 		
 		// Setting bucket parameters
-	    String bucketName = bucket.toString();
-        String key = keyname.toString();
+		String bucketAndKey = keyname.toString();
+	    String bucketName = bucketAndKey.split(" ")[0];
+        String key = bucketAndKey.split(" ")[1];
        
         // String bucketName = "noaa-nexrad-level2";
 		//String key = "2010/01/01/KDDC/KDDC20100101_073731_V03.gz";

@@ -7,7 +7,7 @@ import org.apache.hadoop.mapreduce.*;
 
 public class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {	
 
-	public long runningSum;
+	public int runningSum;
 	public int numberOfDataPoints = 0;
 	
 	
@@ -21,13 +21,25 @@ public class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
             runningSum += val.get();
             numberOfDataPoints++;
         }
+        int average = runningSum/numberOfDataPoints;
+        context.write(new Text("Average"), new IntWritable(average));
 
     }
     // use cleanup to do final sum average
 
     public void clean(Context context) {
     
-    	long average = runningSum/numberOfDataPoints;
+    	int average = runningSum/numberOfDataPoints;
+    	
+    	try {
+			context.write(new Text("Average"), new IntWritable(average));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
   
     	System.out.println("Average of data points is: " + average);
     	// write out json file
