@@ -61,7 +61,7 @@ public class AWSInterface {
 		AWSCredentials credentials;
 		Region region;
 		
-		credentials = new ProfileCredentialsProvider().getCredentials();
+		credentials = new ProfileCredentialsProvider("default").getCredentials();
 		// add better credential searching later
 		
 		region = Region.getRegion(Regions.US_EAST_1);
