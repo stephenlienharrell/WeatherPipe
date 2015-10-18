@@ -9,13 +9,13 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-import edu.purdue.cs307.team16.AwsHelpers;
+import edu.purdue.cs307.team16.AWSInterface;
 
 
 public class RadarFilePicker {
 	
 
-	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, AwsHelpers awsHelpers, String dataBucket){
+	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, AWSInterface awsInterface, String dataBucket){
 	
 		String lowBound = start.toString("yyyyMMdd_hhmmss");
 		String uppBound = end.toString("yyyyMMdd_hhmmss");
@@ -47,7 +47,7 @@ public class RadarFilePicker {
 		
 		try {
 			
-			List<S3ObjectSummary> summaries = awsHelpers.ListBucket(dataBucket, key);
+			List<S3ObjectSummary> summaries = awsInterface.ListBucket(dataBucket, key);
 			for (S3ObjectSummary objectSummary : summaries) {
 
 				index = objectSummary.getKey().indexOf('.');

@@ -29,7 +29,7 @@ public class WeatherPipe {
 		 DateTime endTime = null;
 		 ArrayList<String> radarFileNames;
 		 final String jobID = UUID.randomUUID().toString();
-		 AwsHelpers awsHelpers = new AwsHelpers(jobID); 
+		 AWSInterface awsInterface = new AWSInterface(jobID); 
 		 String jobHadoopJarURL, jobInputURL;
 		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this
 		 String instanceType = "c3.xlarge"; //Make this a flag
@@ -74,13 +74,13 @@ public class WeatherPipe {
 		 
 		 
 
-		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsHelpers, dataBucket);
+		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface, dataBucket);
 		// System.out.println(Arrays.toString(radarFileNames.toArray()));
 		 
-		 awsHelpers.FindOrCreateWeatherPipeJobBucket();
-		 jobInputURL = awsHelpers.UploadInputFileList(radarFileNames, dataBucket);
-		 jobHadoopJarURL = awsHelpers.UploadMPJarFile(hadoopJarFileName);
-		 awsHelpers.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
+		 awsInterface.FindOrCreateWeatherPipeJobBucket();
+		 jobInputURL = awsInterface.UploadInputFileList(radarFileNames, dataBucket);
+		 jobHadoopJarURL = awsInterface.UploadMPJarFile(hadoopJarFileName);
+		 awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 	
 	}
 }
