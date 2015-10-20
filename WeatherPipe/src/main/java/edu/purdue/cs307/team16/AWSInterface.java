@@ -29,6 +29,9 @@ import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowResult;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
+import com.amazonaws.services.identitymanagement.model.GetUserResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
@@ -43,7 +46,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 public class AWSInterface {
 
   
-	private String jobBucketName = "weatherpipe";
+	private String jobBucketNamePrefix = "weatherpipe";
+	private String jobBucketName;
 	private String jobID;
 	private AmazonElasticMapReduce emrClient;
 	private AmazonS3 s3client;
@@ -54,16 +58,19 @@ public class AWSInterface {
 	}
 	
 	public AWSInterface(String job, String bucket){
-		AwsBootstrap(job);
+		AwsBootstrap(job); 
 		jobBucketName = bucket;
 	}
 	
 	private void AwsBootstrap(String job) {
 		AWSCredentials credentials;
-		
+		String userID;
+	
 		
 		credentials = new ProfileCredentialsProvider("default").getCredentials();
 		// add better credential searching later
+		
+		userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
 		
 		region = Region.getRegion(Regions.US_EAST_1);
 		s3client = new AmazonS3Client(credentials);
@@ -71,6 +78,9 @@ public class AWSInterface {
 		
 		emrClient = new AmazonElasticMapReduceClient(credentials);
 		emrClient.setRegion(region);
+		
+		jobBucketName = jobBucketNamePrefix + "." + userID;
+		jobBucketName = jobBucketName.toLowerCase();
 		
 		jobID = job;
 	}
@@ -99,7 +109,7 @@ public class AWSInterface {
             	s3client.createBucket(new CreateBucketRequest(
 						jobBucketName));
             }
-            s3client.getBucketAcl(jobBucketName);
+
             bucketLocation = "s3n://" + jobBucketName + "/";
             
          } catch (AmazonServiceException ase) {
