@@ -47,6 +47,7 @@ public class AWSInterface {
 	private String jobID;
 	private AmazonElasticMapReduce emrClient;
 	private AmazonS3 s3client;
+	Region region;
 	
 	public AWSInterface(String job){
 		AwsBootstrap(job);
@@ -59,7 +60,7 @@ public class AWSInterface {
 	
 	private void AwsBootstrap(String job) {
 		AWSCredentials credentials;
-		Region region;
+		
 		
 		credentials = new ProfileCredentialsProvider("default").getCredentials();
 		// add better credential searching later
@@ -89,13 +90,15 @@ public class AWSInterface {
 	
 	public String FindOrCreateWeatherPipeJobBucket() {
 		String bucketLocation = null;
+		CreateBucketRequest bReq;
 
 		try {
             if(!(s3client.doesBucketExist(jobBucketName))) {
             	// Note that CreateBucketRequest does not specify region. So bucket is 
             	// created in the region specified in the client.
-            	s3client.createBucket(new CreateBucketRequest(
-						jobBucketName));
+            	bReq = new CreateBucketRequest(jobBucketName);
+            	bReq.setRegion(region.toString());
+            	s3client.createBucket(bReq);
             }
             bucketLocation = "s3n://" + jobBucketName + "/";
             
@@ -109,6 +112,7 @@ public class AWSInterface {
              System.out.println("AWS Error Code:   " + ase.getErrorCode());
              System.out.println("Error Type:       " + ase.getErrorType());
              System.out.println("Request ID:       " + ase.getRequestId());
+             System.exit(1);
          } catch (AmazonClientException ace) {
              System.out.println("Caught an AmazonClientException, which " +
              		"means the client encountered " +
@@ -116,7 +120,7 @@ public class AWSInterface {
                      "communicate with S3, " +
                      "such as not being able to access the network.");
              System.out.println("Error Message: " + ace.getMessage());
-         
+             System.exit(1);
          }
 		return bucketLocation;	
 	}
@@ -149,6 +153,7 @@ public class AWSInterface {
             System.out.println("AWS Error Code:   " + ase.getErrorCode());
             System.out.println("Error Type:       " + ase.getErrorType());
             System.out.println("Request ID:       " + ase.getRequestId());
+            System.exit(1);
         } catch (AmazonClientException ace) {
             System.out.println("Caught an AmazonClientException, which " +
             		"means the client encountered " +
@@ -156,7 +161,7 @@ public class AWSInterface {
                     "communicate with S3, " +
                     "such as not being able to access the network.");
             System.out.println("Error Message: " + ace.getMessage());
-        
+            System.exit(1);
         }		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
@@ -177,6 +182,7 @@ public class AWSInterface {
             System.out.println("AWS Error Code:   " + ase.getErrorCode());
             System.out.println("Error Type:       " + ase.getErrorType());
             System.out.println("Request ID:       " + ase.getRequestId());
+            System.exit(1);
         } catch (AmazonClientException ace) {
             System.out.println("Caught an AmazonClientException, which " +
             		"means the client encountered " +
@@ -184,7 +190,7 @@ public class AWSInterface {
                     "communicate with S3, " +
                     "such as not being able to access the network.");
             System.out.println("Error Message: " + ace.getMessage());
-        
+            System.exit(1);
         }		
 		
 		return "s3n://" + jobBucketName + "/" + key;
