@@ -96,10 +96,10 @@ public class AWSInterface {
             if(!(s3client.doesBucketExist(jobBucketName))) {
             	// Note that CreateBucketRequest does not specify region. So bucket is 
             	// created in the region specified in the client.
-            	bReq = new CreateBucketRequest(jobBucketName);
-            	bReq.setRegion(region.toString());
-            	s3client.createBucket(bReq);
+            	s3client.createBucket(new CreateBucketRequest(
+						jobBucketName));
             }
+            s3client.getBucketAcl(jobBucketName);
             bucketLocation = "s3n://" + jobBucketName + "/";
             
          } catch (AmazonServiceException ase) {
