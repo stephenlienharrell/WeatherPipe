@@ -34,6 +34,7 @@ public class WeatherPipe {
 		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this
 		 String instanceType = "c3.xlarge"; //Make this a flag
 		 int instanceCount = 1; // Make this a flag
+		 String bucketName;
 		 
 		 // create Options object
 		 Options options = new Options();
@@ -73,13 +74,26 @@ public class WeatherPipe {
 		 }
 		 
 		 
-
+		 System.out.println("Searching NEXRAD Files");
 		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface, dataBucket);
-		// System.out.println(Arrays.toString(radarFileNames.toArray()));
+		 System.out.println("Found " + radarFileNames.size() + " NEXRAD Radar files between " + startTime.toString() + " and " + endTime.toString() );
 		 
-		 awsInterface.FindOrCreateWeatherPipeJobBucket();
+		 System.out.println("Search for/Create WeatherPipe S3 bucket");
+		 bucketName = awsInterface.FindOrCreateWeatherPipeJobBucket();
+		 if(bucketName == null) {
+			 System.out.println("Bucket was not created correctly");
+			 System.exit(1);
+		 }
+		 System.out.println("Using bucket " + bucketName);
+		 
+		 System.out.print("Uploading Input file... ");		 
 		 jobInputURL = awsInterface.UploadInputFileList(radarFileNames, dataBucket);
+		 System.out.println("Complete");
+		 
+		 System.out.print("Uploading Jar file... ");
 		 jobHadoopJarURL = awsInterface.UploadMPJarFile(hadoopJarFileName);
+		 System.out.println("Complete");
+		 
 		 awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 	
 	}

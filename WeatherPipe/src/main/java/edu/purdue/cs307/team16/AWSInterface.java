@@ -65,7 +65,7 @@ public class AWSInterface {
 		// add better credential searching later
 		
 		region = Region.getRegion(Regions.US_EAST_1);
-	    s3client = new AmazonS3Client(credentials);
+		s3client = new AmazonS3Client(credentials);
 		s3client.setRegion(region);
 		
 		emrClient = new AmazonElasticMapReduceClient(credentials);
@@ -81,7 +81,7 @@ public class AWSInterface {
 
 		while (listing.isTruncated()) {
 		   listing = s3client.listNextBatchOfObjects (listing);
-		   summaries.addAll (listing.getObjectSummaries());
+		   summaries.addAll(listing.getObjectSummaries());
 		}
 		
 		return summaries;
@@ -97,9 +97,7 @@ public class AWSInterface {
             	s3client.createBucket(new CreateBucketRequest(
 						jobBucketName));
             }
-            // Get location.
-            bucketLocation = s3client.getBucketLocation(
-            		new GetBucketLocationRequest(jobBucketName));
+            bucketLocation = "s3n://" + jobBucketName + "/";
             
          } catch (AmazonServiceException ase) {
              System.out.println("Caught an AmazonServiceException, which " +
@@ -139,7 +137,8 @@ public class AWSInterface {
 		
 		// may need to set content size
 		objMeta.setContentType("text/plain");
-		s3client.putObject(new PutObjectRequest(jobBucketName, key, uploadFileStream, objMeta));		
+
+		s3client.putObject(jobBucketName, key, uploadFileStream, objMeta);		
 		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
@@ -147,7 +146,7 @@ public class AWSInterface {
 	public String UploadMPJarFile(String fileLocation) {
 		String key = jobID + "WeatherPipeMapreduce.jar";
 		File jarFile = new File(fileLocation);
-		s3client.putObject(new PutObjectRequest(jobBucketName, key, jarFile));
+		s3client.putObject(jobBucketName, key, jarFile);
 		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
