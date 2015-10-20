@@ -96,7 +96,6 @@ public class AWSInterface {
 	
 	public String FindOrCreateWeatherPipeJobBucket() {
 		String bucketLocation = null;
-		CreateBucketRequest bReq;
 
 		try {
             if(!(s3client.doesBucketExist(jobBucketName))) {
