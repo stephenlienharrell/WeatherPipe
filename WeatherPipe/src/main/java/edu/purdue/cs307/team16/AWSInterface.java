@@ -197,6 +197,7 @@ public class AWSInterface {
         	 if(ase.getStatusCode() == 403) {
         		 System.out.println("You do not have propper permissions to access " + jobBucketName + 
         				 	". S3 uses a global name space, please make sure you are using a unique bucket name.");
+        		 System.exit(1);
         	 } else {
         	 
         		 System.out.println("Caught an AmazonServiceException, which " +
