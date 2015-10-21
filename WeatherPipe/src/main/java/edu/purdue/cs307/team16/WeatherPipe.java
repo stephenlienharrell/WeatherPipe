@@ -1,7 +1,6 @@
 package edu.purdue.cs307.team16;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -28,7 +27,7 @@ public class WeatherPipe {
 		 DateTime startTime = null;
 		 DateTime endTime = null;
 		 ArrayList<String> radarFileNames;
-		 final String jobID = UUID.randomUUID().toString();
+		 final String jobID = null; 
 		 AWSInterface awsInterface = new AWSInterface(jobID); 
 		 String jobHadoopJarURL, jobInputURL;
 		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this

@@ -5,10 +5,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.json.JSONObject;
@@ -43,7 +47,7 @@ public class AWSInterface {
 
   
 	private String jobBucketNamePrefix = "weatherpipe";
-	private String jobBucketName;
+	private String jobBucketName = null;
 	private String jobID;
 	private AmazonElasticMapReduce emrClient;
 	private AmazonS3 s3client;
@@ -61,13 +65,13 @@ public class AWSInterface {
 	private void AwsBootstrap(String job) {
 		AWSCredentials credentials;
 		String userID;
-	
+		MessageDigest md = null;
+		byte[] shaHash;
+		StringBuffer hexSha;
 		
 		credentials = new ProfileCredentialsProvider("default").getCredentials();
-		// add better credential searching later
-		
-		userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
-		
+		// TODO: add better credential searching later
+			
 		region = Region.getRegion(Regions.US_EAST_1);
 		s3client = new AmazonS3Client(credentials);
 		s3client.setRegion(region);
@@ -75,10 +79,39 @@ public class AWSInterface {
 		emrClient = new AmazonElasticMapReduceClient(credentials);
 		emrClient.setRegion(region);
 		
-		jobBucketName = jobBucketNamePrefix + "." + userID;
+		if(jobBucketName == null) {
+			userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
+			try {
+				md = MessageDigest.getInstance("SHA-256");
+				md.update(userID.getBytes("UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			shaHash = md.digest();
+			hexSha = new StringBuffer();
+			for(byte b : shaHash) {
+				hexSha.append(String.format("%02X", b));		
+			}
+		
+			jobBucketName = jobBucketNamePrefix + "." + hexSha;
+			if(jobBucketName.length() > 63) {
+				jobBucketName = jobBucketName.substring(0,62);
+			}
+		
+		}
+		
 		jobBucketName = jobBucketName.toLowerCase();
 		
-		jobID = job;
+		if(job == null) {
+			jobID = UUID.randomUUID().toString();
+		} else {
+			jobID = job;
+		}
+		
 	}
 	
 	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
@@ -103,7 +136,8 @@ public class AWSInterface {
             	// created in the region specified in the client.
             	s3client.createBucket(new CreateBucketRequest(
 						jobBucketName));
-            }
+            
+            } // TODO add 
 
             bucketLocation = "s3n://" + jobBucketName + "/";
             
