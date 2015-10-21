@@ -2,18 +2,29 @@ package edu.purdue.cs307.team16;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.json.JSONObject;
 
@@ -42,17 +53,22 @@ import com.amazonaws.services.s3.model.HeadBucketRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.TransferManager;
 
 
 public class AWSInterface {
 
   
 	private String jobBucketNamePrefix = "weatherpipe";
-	private String jobBucketName = null;
-	private String jobID;
 	private AmazonElasticMapReduce emrClient;
 	private AmazonS3 s3client;
-	Region region;
+	private Region region;
+	private String jobDirName;
+	private String jobSetupDirName;
+	private String jobLogDirName;
+
+	private String jobBucketName = null;
+	private String jobID;
 	
 	public AWSInterface(String job){
 		AwsBootstrap(job);
@@ -69,6 +85,13 @@ public class AWSInterface {
 		MessageDigest md = null;
 		byte[] shaHash;
 		StringBuffer hexSha;
+		DateFormat df;
+		TimeZone tz;
+		String isoDate;	
+		File jobDir;
+		File jobSetupDir;
+		File jobLogDir;
+		int i;
 		
 		credentials = new ProfileCredentialsProvider("default").getCredentials();
 		// TODO: add better credential searching later
@@ -108,11 +131,37 @@ public class AWSInterface {
 		jobBucketName = jobBucketName.toLowerCase();
 		
 		if(job == null) {
-			jobID = UUID.randomUUID().toString();
+		    tz = TimeZone.getTimeZone("UTC");
+		    df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
+		    df.setTimeZone(tz);
+		    isoDate = df.format(new Date());
+			jobID = isoDate + "." + Calendar.getInstance().get(Calendar.MILLISECOND);
+			
+		//  UUID Code if date isn't good	
+		//	jobID = UUID.randomUUID().toString();
 		} else {
 			jobID = job;
 		}
 		
+		jobDirName = "WeatherPipeJob" + jobID;
+		jobDir = new File(jobDirName);
+        i = 0;
+        while(jobDir.exists()) {
+        	i++;
+        	
+        	jobDir = new File(jobDirName + "-" + i);
+        }
+        if(i != 0) jobDirName = jobDirName + "-" + i;
+        
+        jobDir.mkdir();
+        
+        jobSetupDirName = jobDirName + "/" + "job_setup";
+        jobSetupDir = new File(jobSetupDirName);
+        jobSetupDir.mkdir();
+        
+		jobLogDirName = jobDirName + "/" + "logs";
+		jobLogDir = new File(jobLogDirName);
+		jobLogDir.mkdir();
 	}
 	
 	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
@@ -180,6 +229,8 @@ public class AWSInterface {
 		ObjectMetadata objMeta = new ObjectMetadata();
 		String uploadFileString = "";
 		InputStream uploadFileStream;
+		PrintWriter inputFile = null;
+		
 		
 		for (String s : fileList)
 		{
@@ -212,8 +263,20 @@ public class AWSInterface {
             System.out.println("Error Message: " + ace.getMessage());
             System.exit(1);
         }		
+		
+		try {
+			inputFile = new PrintWriter(jobSetupDirName + "/" + key);
+			inputFile.print(uploadFileString);
+			inputFile.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+		}	
+		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
+	
 	
 	public String UploadMPJarFile(String fileLocation) {
 		String key = jobID + "WeatherPipeMapreduce.jar";
@@ -242,6 +305,14 @@ public class AWSInterface {
             System.exit(1);
         }		
 		
+		try {
+			FileUtils.copyFile(new File(fileLocation), new File(jobSetupDirName + "/" + key));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
 
@@ -259,12 +330,17 @@ public class AWSInterface {
 		List<String> jobArguments = Arrays.asList(arguments);
 		DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest();
 		DescribeClusterResult describeClusterResult;
-		File errorLog = new File("WeatherPipeLog" + jobID + ".log");
-		File outputFile = new File("WeatherPipeOut" + jobID + ".out");
+		File rawOutputFile = new File(jobDirName + "/" + jobID + "_raw_map_reduce_output");
+		File outputFile = new File(jobDirName + "/" + jobID + "_output");
+		File localLogDir = new File(jobLogDirName);
+
 		ReversedLinesFileReader revLineRead;
 		String finalAverage;
 		JSONObject jsonObj = new JSONObject();
 		FileWriter fileWriter; 
+
+		TransferManager transMan = new TransferManager(s3client);
+		
 		
         try {
             // Configure instances to use
@@ -310,6 +386,7 @@ public class AWSInterface {
             describeClusterRequest.setClusterId(result.getJobFlowId());
             
             
+            
             //Check the status of the running job
             String lastState = "";
             while (true)
@@ -322,13 +399,16 @@ public class AWSInterface {
             	if(!lastState.startsWith("TERMINATED")) {
             		continue;
             	}
-           // 	s3client.getObject(new GetObjectRequest(jobBucketName, jobID + ".log"), errorLog);
+            	
+            	transMan.downloadDirectory(jobBucketName, jobID + ".log", localLogDir);
+            	
             	if(!lastState.endsWith("ERRORS")) {	
-            		
-            		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), outputFile);
+            		// TODO ABSTRACT THIS FILE WRITER OUT!         		
+            		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), rawOutputFile);
             		System.out.println("The job has ended and output has been downloaded");
     
-            		revLineRead = new ReversedLinesFileReader(outputFile, 4096, Charset.forName("UTF-8"));
+
+            		revLineRead = new ReversedLinesFileReader(rawOutputFile, 4096, Charset.forName("UTF-8"));
             //		System.out.println("First Line: " + revLineRead.readLine());
             		finalAverage = revLineRead.readLine();
             //		System.out.println("Second Line: " + finalAverage.split("\\t")[0]);
