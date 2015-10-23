@@ -14,9 +14,10 @@ repositories {
 
 dependencies {
    compile 'commons-cli:commons-cli:1.3'
-   compile 'com.amazonaws:aws-java-sdk:1.10.26'
-   compile 'edu.ucar:netcdf4:4.4.2'
+   compile 'com.amazonaws:aws-java-sdk:1.10.27'
    compile 'joda-time:joda-time:2.8.2'
+   compile 'commons-io:commons-io:2.4'
+   compile 'org.json:json:20150729'
 }
 
-
+apply plugin: 'eclipse'
