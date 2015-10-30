@@ -18,6 +18,23 @@ dependencies {
    compile 'joda-time:joda-time:2.8.2'
    compile 'commons-io:commons-io:2.4'
    compile 'org.json:json:20150729'
+   testCompile 'junit:junit:4.12'
+   compile 'junit:junit:4.12'
+
+}
+sourceSets {
+    test {
+        java {
+            srcDirs = ["src/main/edu/purdue/cs307/team16/test"] 
+        }
+    }
+}
+
+test {
+    testLogging {
+        // Show that tests are run in the command-line output
+        events 'started', 'passed'
+    }
 }
 
 apply plugin: 'eclipse'
