@@ -85,9 +85,8 @@ public class RadarFilePicker {
 		String lowBound = start.toString("yyyyMMdd_HHmmss");
 		String uppBound = end.toString("yyyyMMdd_HHmmss");
 		ArrayList<String> ret = new ArrayList<String>();
-		
+		int days;
 		String key = null;
-		
 		Period everyday = Period.days(1);
 		DateTime dt = start;
 		String temp = null;
@@ -95,7 +94,7 @@ public class RadarFilePicker {
 		Date endForDiff =  new Date(end.getYear(), end.getMonthOfYear(), end.getDayOfMonth());
 		
 		//int days = Days.daysBetween(start, end).getDays();
-		int days = Days.daysBetween(new DateTime(startForDiff), new DateTime(endForDiff)).getDays();
+		days = Days.daysBetween(new DateTime(startForDiff), new DateTime(endForDiff)).getDays();
 		if(days == 0) {
 			key = lowBound.substring(0, 4) + "/" + lowBound.substring(4, 6) + "/" + lowBound.substring(6, 8);
 			addFile(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
