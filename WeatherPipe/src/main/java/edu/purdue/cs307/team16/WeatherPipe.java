@@ -35,7 +35,7 @@ public class WeatherPipe {
 		 String instanceType = null; //Make this a flag
 		 int instanceCount = 1; // Make this a flag
 		 String bucketName;
-		 
+
 		 // create Options object
 		 Options options = new Options();
 		 CommandLineParser parser = new DefaultParser();
