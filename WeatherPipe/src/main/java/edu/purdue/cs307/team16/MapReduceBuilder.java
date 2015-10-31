@@ -14,6 +14,8 @@ public class MapReduceBuilder {
 	FileSystem fs = FileSystems.getDefault();
 	Path gradleBinary = fs.getPath("/opt/local/bin/gradle");
 
+	// just run gradle directly
+	// !!!!!!!!
 	
 	
 	boolean CheckGradleCompat() {
@@ -53,6 +55,8 @@ public class MapReduceBuilder {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		 
+		 
 		return new File("");
 	}
 

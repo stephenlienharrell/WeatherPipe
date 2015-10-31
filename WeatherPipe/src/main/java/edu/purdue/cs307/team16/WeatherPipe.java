@@ -24,7 +24,7 @@ public class WeatherPipe {
 		 final String dateDesc = "Date Format is " + dateFormatString;
 		 final DateTimeFormatter dateFormat = DateTimeFormat.forPattern(
 			dateFormatString);
-		 String dataBucket = null;
+		 String dataBucket = "noaa-nexrad-level2";
 		 DateTime startTime = null;
 		 DateTime endTime = null;
 		 ArrayList<String> radarFileNames;
@@ -34,7 +34,7 @@ public class WeatherPipe {
 		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this
 		 String instanceType = null; //Make this a flag
 		 int instanceCount = 1; // Make this a flag
-		 String bucketName;
+		 String bucketName = null;
 
 		 // create Options object
 		 Options options = new Options();
@@ -57,13 +57,9 @@ public class WeatherPipe {
 			 
 			 //System.out.println(line.getOptionValue("start_time") + " " + line.getOptionValue("end_time"));
 			 
-			 if( line.hasOption( "bucket_name" ) &&
-					 (line.getOptionValue("bucket_name") != null) ) {
-				 dataBucket = line.getOptionValue("bucket_name");
-			 } else {
-				System.out.println("Flag bucket_name is required");
-				System.exit(1);
-			 } 
+
+			 
+			 System.out.println(bucketName);
 			 
 			 if( line.hasOption( "start_time" ) &&
 					 (line.getOptionValue("start_time") != null) ) {
@@ -92,34 +88,27 @@ public class WeatherPipe {
 				System.exit(1);
 			 } 
 			 
-			 if( line.hasOption( "jobID" ) &&
-					 (line.getOptionValue("jobID") != null) ) {
+			 if( line.hasOption("jobID") ) {
 				 jobID = line.getOptionValue("jobID");
+			 }
+			 
+			 if( line.hasOption( "bucket_name" ) ){
+				 bucketName = line.getOptionValue("bucket_name");
+				 awsInterface = new AWSInterface(jobID, bucketName);
+
+			 } else {
 				 awsInterface = new AWSInterface(jobID);
-			 } else if (!line.hasOption( "jobID" )) {
-				 System.out.println("Flag jobID is null");
-			 } else {
-				System.out.println("Flag jobID is required");
-				System.exit(1);
-			 } 
+				 
+			 }
 			 
-			 if( line.hasOption( "instanceType" ) &&
-					 (line.getOptionValue("instanceType") != null) ) {
+			 if( line.hasOption( "instanceType" ) ) {
 				 instanceType = line.getOptionValue("instanceType");
-			 } else {
-				System.out.println("Flag instanceType is required");
-				System.exit(1);
+			 }
+			 
+			 if( line.hasOption( "instanceCount" ) ) {
+				 instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
 			 } 
 			 
-			 if( line.hasOption( "instanceCount" ) &&
-					 (line.getOptionValue("instanceCount") != null) ) {
-				 instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
-			 } else if (!line.hasOption( "instanceCount" )){
-				 instanceCount = 1;
-			 } else {
-				System.out.println("Flag instanceType is required");
-				System.exit(1);
-			 } 
 		 } catch( ParseException exp ) {
 			 System.out.println( "Unexpected exception:" + exp.getMessage() );
 		 }
