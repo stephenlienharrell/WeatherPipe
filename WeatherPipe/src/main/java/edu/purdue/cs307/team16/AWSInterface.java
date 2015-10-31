@@ -63,6 +63,7 @@ public class AWSInterface {
 	private String jobDirName;
 	private String jobSetupDirName;
 	private String jobLogDirName;
+	private String defaultInstance = "c3.xlarge";
 
 	private String jobBucketName = null;
 	private String jobID;
@@ -338,9 +339,13 @@ public class AWSInterface {
 		String finalAverage;
 		JSONObject jsonObj = new JSONObject();
 		FileWriter fileWriter; 
+	
 
 		TransferManager transMan = new TransferManager(s3client);
-		
+	
+		if(instanceType == null) {
+			instanceType = defaultInstance;
+		}
 		
         try {
             // Configure instances to use
