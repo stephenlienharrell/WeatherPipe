@@ -139,7 +139,7 @@ public class WeatherPipe {
 		 long elapsedTime = (endTimeOfProgram - startTimeOfProgram)/(1000);
 		 System.out.println("Elapsed time =" + elapsedTime + " seconds\n" );
 		 
-		 System.exit(1);
+		 System.exit(0);
 	
 	}
 }
