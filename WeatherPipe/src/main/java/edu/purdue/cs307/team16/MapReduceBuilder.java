@@ -63,6 +63,8 @@ public class MapReduceBuilder {
 			System.exit(1);
 		}
 		System.out.println("Build completed");
+		System.out.println("MapReduce jar location: " + weatherPipeJarLocation);
+		System.out.println();
 		
 		return weatherPipeJarLocation;
 	}

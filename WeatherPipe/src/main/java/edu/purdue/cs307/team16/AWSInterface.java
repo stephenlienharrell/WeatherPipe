@@ -344,8 +344,10 @@ public class AWSInterface {
 		TransferManager transMan = new TransferManager(s3client);
 		
 		if(instanceType == null) {
-			System.out.println("Instance type is being manually set\n");
 			instanceType = "c3.xlarge";
+			System.out.println("Instance type is set to default: " + instanceType);
+			System.out.println();
+			
 		}
 		
         try {

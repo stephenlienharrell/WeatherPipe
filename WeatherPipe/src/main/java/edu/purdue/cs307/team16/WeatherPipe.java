@@ -116,7 +116,7 @@ public class WeatherPipe {
 		 System.out.println("Searching NEXRAD Files");
 		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface, dataBucket);
 		 System.out.println("Found " + radarFileNames.size() + " NEXRAD Radar files between " + startTime.toString() + " and " + endTime.toString() );
-		 
+		 System.out.println();
 		 System.out.println("Search for/Create WeatherPipe S3 bucket");
 		 bucketName = awsInterface.FindOrCreateWeatherPipeJobBucket();
 		 if(bucketName == null) {
