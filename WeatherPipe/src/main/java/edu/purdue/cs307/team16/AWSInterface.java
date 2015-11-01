@@ -406,13 +406,18 @@ public class AWSInterface {
             		continue;
             	}
             	
+            	// it reaches here when the emr has "terminated"
+            	int normalized_hours = cluster.getNormalizedInstanceHours();
+        		System.out.printf("Normalized instance hours = %d\n", normalized_hours);
+        		double cost = normalized_hours * 0.011;
+        		
             	transMan.downloadDirectory(jobBucketName, jobID + ".log", localLogDir);
             	
             	if(!lastState.endsWith("ERRORS")) {	
             		// TODO ABSTRACT THIS FILE WRITER OUT!         		
             		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), rawOutputFile);
             		System.out.println("The job has ended and output has been downloaded");
-    
+            		System.out.printf("Approximate cost of this run = $%2.02f\n", cost);
 
             		revLineRead = new ReversedLinesFileReader(rawOutputFile, 4096, Charset.forName("UTF-8"));
             //		System.out.println("First Line: " + revLineRead.readLine());
@@ -427,7 +432,7 @@ public class AWSInterface {
             		break;
             	}
             	System.out.println("The job has ended with errors, please check the log");
-            	
+            	System.out.printf("Approximate cost of this run = $%2.02f\n", cost);
             	
             	break;
                 
