@@ -55,6 +55,13 @@ public class MapReduceBuilder {
 			e1.printStackTrace();
 			System.exit(1);
 		}
+		try {
+			command.waitFor();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			sys.exit(1);
+		}
 		if(command.exitValue() == 1) {
 			System.out.println("Map Reduce Jar Build Failed");
 			System.exit(1);
