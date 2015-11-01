@@ -7,9 +7,6 @@ mainClassName = "edu.purdue.cs307.team16.WeatherPipe"
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/"
-    }
 }
 
 dependencies {
@@ -19,7 +16,6 @@ dependencies {
    compile 'joda-time:joda-time:2.8.2'
    compile 'commons-io:commons-io:2.4'
    compile 'org.json:json:20150729'
-   compile 'org.xeustechnologies:jcl:2.6'
    testCompile 'junit:junit:4.12'
    compile 'junit:junit:4.12'
    
