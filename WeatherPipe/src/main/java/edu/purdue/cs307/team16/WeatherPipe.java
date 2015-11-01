@@ -31,11 +31,12 @@ public class WeatherPipe {
 		 String jobID = null; 
 		 AWSInterface awsInterface = new AWSInterface(jobID); 
 		 String jobHadoopJarURL, jobInputURL;
-		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this
 		 String instanceType = null; //Make this a flag
 		 int instanceCount = 1; // Make this a flag
 		 String bucketName = null;
-
+		 MapReduceBuilder builder = new MapReduceBuilder(null);
+		 String mapReduceJarFile;
+		
 		 // create Options object
 		 Options options = new Options();
 		 CommandLineParser parser = new DefaultParser();
@@ -107,6 +108,8 @@ public class WeatherPipe {
 			 System.out.println( "Unexpected exception:" + exp.getMessage() );
 		 }
 		 
+		 String mapReduceJarLocation = builder.buildMapReduceJar();
+
 		 
 		 System.out.println("Searching NEXRAD Files");
 		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface, dataBucket);
@@ -125,7 +128,7 @@ public class WeatherPipe {
 		 System.out.println("Complete");
 		 
 		 System.out.print("Uploading Jar file... ");
-		 jobHadoopJarURL = awsInterface.UploadMPJarFile(hadoopJarFileName);
+		 jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
 		 System.out.println("Complete");
 		 
 		 awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);

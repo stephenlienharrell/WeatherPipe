@@ -1,7 +1,9 @@
 package edu.purdue.cs307.team16;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.file.FileSystem;
@@ -11,53 +13,105 @@ import java.nio.file.Path;
 
 public class MapReduceBuilder {
 	
-	FileSystem fs = FileSystems.getDefault();
-	Path gradleBinary = fs.getPath("/opt/local/bin/gradle");
+	String gradleBinary = null;
+	String weatherPipeMapReduceDir = null;
 
-	// just run gradle directly
-	// !!!!!!!!
-	
-	
-	boolean CheckGradleCompat() {
-		return true;
-	}
-	
-	File findGradleJars() {
-		Path realPath = null;
-		Path libPath;
-		String gradleRootPath;
-		Path gradleLibPath;
-		try {
-			realPath = gradleBinary.toRealPath();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public MapReduceBuilder(String gradleBin) {
+		if(gradleBin != null) {
+			gradleBinary = gradleBin;
 		}
-		
-		realPath = realPath.normalize();
-		libPath = realPath.getParent();
-		gradleRootPath = libPath.subpath(0, libPath.getNameCount() - 1).toString();
-
-		return new File("thing");
-		
-		
-		
 	}
 	
-	File findMapReduceBuildPath() {
-		 String path = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-		 String decodedPath;
-		 
-		 try {
-			decodedPath = URLDecoder.decode(path, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
+	String buildMapReduceJar() {
+		
+		
+		findGradlePath();
+		findWeatherPipeMapReduceBuildDir();
+		System.out.println("Attempting to build Map Reduce with");
+		System.out.println("gradle: " + gradleBinary);
+		System.out.println("build directory: " + weatherPipeMapReduceDir);
+		System.out.println();
+		String weatherPipeJarLocation = weatherPipeMapReduceDir + "/build/libs/WeatherPipeMapReduce.jar";
+		Process command = null;
+		final String[] args = {gradleBinary, "build"};
+		final String[] env = { "JAVA_HOME=" + System.getProperty("java.home") };
+		BufferedReader buildOut;
+		String buildLine;
+		
+		try {
+			command = Runtime.getRuntime().exec(args, env, new File(weatherPipeMapReduceDir));	
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 			System.exit(1);
 		}
-		 
-		 
-		return new File("");
+		try {
+			
+			buildOut = new BufferedReader(new InputStreamReader(command.getInputStream()));
+			
+			while((buildLine = buildOut.readLine()) != null) {
+				System.out.println(buildLine);				
+			}
+		} catch (IOException e1) {
+			
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			System.exit(1);
+		}
+		if(command.exitValue() == 1) {
+			System.out.println("Map Reduce Jar Build Failed");
+			System.exit(1);
+		}
+		System.out.println("Build completed");
+		
+		return weatherPipeJarLocation;
+	}
+	
+	// should take a flag to override this
+	void findGradlePath() {
+		Process command = null;
+		
+		if(gradleBinary == null ){ 
+			try {
+				command = Runtime.getRuntime().exec("which gradle");	
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				System.exit(1);
+			}
+			try {
+				gradleBinary = new BufferedReader(new InputStreamReader(command.getInputStream())).readLine();
+			} catch (IOException e1) {
+			
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				System.exit(1);
+			}
+		}
+			
 	}
 
+	// probably should take a flag to override this 
+	void findWeatherPipeMapReduceBuildDir() {
+		String path = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String decodedPath = "";
+			 
+		 
+	 	try {
+			decodedPath = URLDecoder.decode(path, "UTF-8");
+	 	} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+ 			e.printStackTrace();
+	 		System.exit(1);
+		}
+	 	// Only works on Linux and Mac
+	 	// expecting a long directory like /home/user/thing/WeatherPipe/lib/Weatherpipe.jar
+	 	// just need /home/user/thing/WeatherPipe/
+	 	
+	 	// probably need some better checking here
+	 	weatherPipeMapReduceDir = decodedPath.substring(0, 
+	 			decodedPath.substring(0, 
+	 					decodedPath.lastIndexOf("/")).lastIndexOf("/")) + "/WeatherPipeMapReduce";	
+	}
+	
 }
