@@ -12,8 +12,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import edu.purdue.cs307.team16.RadarFilePicker;
-
-//import edu.purdue.cs307.team16.S3FileReadPrototype;
 		 
 public class WeatherPipe {
 
