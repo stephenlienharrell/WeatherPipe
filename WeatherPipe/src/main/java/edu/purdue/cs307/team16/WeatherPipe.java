@@ -17,8 +17,6 @@ public class WeatherPipe {
 
 	public static void main(String[] args) {
 		
-		long startTimeOfProgram = System.currentTimeMillis();;
-		
 		 //final String dataBucket = "noaa-nexrad-level2";
 		 final String dateFormatString = "dd/MM/yyyy HH:mm:ss";
 		 final String dateDesc = "Date Format is " + dateFormatString;
@@ -35,7 +33,7 @@ public class WeatherPipe {
 		 int instanceCount = 1; // Make this a flag
 		 String bucketName = null;
 		 MapReduceBuilder builder = new MapReduceBuilder(null);
-		 String mapReduceJarFile;
+
 		
 		 // create Options object
 		 Options options = new Options();
@@ -130,14 +128,9 @@ public class WeatherPipe {
 		 System.out.print("Uploading Jar file... ");
 		 jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
 		 System.out.println("Complete");
-		 
+		 	 
 		 awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 		 
-		 long endTimeOfProgram = System.currentTimeMillis(); // returns milliseconds
-		 long elapsedTime = (endTimeOfProgram - startTimeOfProgram)/(1000);
-		 System.out.println("Elapsed time =" + elapsedTime + " seconds\n" );
-		 
-		 System.exit(0);
-	
+		 awsInterface.close();
 	}
 }

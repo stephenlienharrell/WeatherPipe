@@ -50,6 +50,7 @@ import com.amazonaws.services.s3.model.HeadBucketRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 
 
@@ -59,6 +60,7 @@ public class AWSInterface {
 	private String jobBucketNamePrefix = "weatherpipe";
 	private AmazonElasticMapReduce emrClient;
 	private AmazonS3 s3client;
+	private TransferManager transMan;
 	private Region region;
 	private String jobDirName;
 	private String jobSetupDirName;
@@ -67,6 +69,7 @@ public class AWSInterface {
 
 	private String jobBucketName = null;
 	private String jobID;
+	
 	
 
 	
@@ -99,6 +102,8 @@ public class AWSInterface {
 		region = Region.getRegion(Regions.US_EAST_1);
 		s3client = new AmazonS3Client(credentials);
 		s3client.setRegion(region);
+		
+		transMan = new TransferManager(s3client);
 		
 		emrClient = new AmazonElasticMapReduceClient(credentials);
 		emrClient.setRegion(region);
@@ -336,14 +341,18 @@ public class AWSInterface {
 		File rawOutputFile = new File(jobDirName + "/" + jobID + "_raw_map_reduce_output");
 		File outputFile = new File(jobDirName + "/" + jobID + "_output");
 		File localLogDir = new File(jobLogDirName);
+		int normalized_hours;
+		double cost;
+		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
+		
 
 		ReversedLinesFileReader revLineRead;
 		String finalAverage;
 		JSONObject jsonObj = new JSONObject();
 		FileWriter fileWriter; 
-	
+		MultipleFileDownload logDirDownload;
 
-		TransferManager transMan = new TransferManager(s3client);
+		startTimeOfProgram = System.currentTimeMillis();
 		
 		if(instanceType == null) {
 			instanceType = "c3.xlarge";
@@ -411,22 +420,34 @@ public class AWSInterface {
             	}
             	
             	// it reaches here when the emr has "terminated"
-            	int normalized_hours = cluster.getNormalizedInstanceHours();
-        		System.out.printf("Normalized instance hours = %d\n", normalized_hours);
-        		double cost = normalized_hours * 0.011;
+            	
+            	normalized_hours = cluster.getNormalizedInstanceHours();
+        		cost = normalized_hours * 0.011;
+       	  	    endTimeOfProgram = System.currentTimeMillis(); // returns milliseconds
+    		    elapsedTime = (endTimeOfProgram - startTimeOfProgram)/(1000);
+    		 
         		
-            	transMan.downloadDirectory(jobBucketName, jobID + ".log", localLogDir);
+            	logDirDownload = transMan.downloadDirectory(jobBucketName, jobID + ".log", localLogDir);
+            	
+        		
+        		while(!logDirDownload.isDone()) {
+        			Thread.sleep(1000);
+        		}
+            	
+        		
             	
             	if(!lastState.endsWith("ERRORS")) {	
             		// TODO ABSTRACT THIS FILE WRITER OUT!         		
             		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), rawOutputFile);
-            		System.out.println("The job has ended and output has been downloaded");
-            		System.out.printf("Approximate cost of this run = $%2.02f\n", cost);
+            		
+            		
+            		System.out.println("The job has ended and output has been downloaded to " + localLogDir);
+            		System.out.printf("Normalized instance hours: %d\n", normalized_hours);
+            		System.out.printf("Approximate cost of this run: $%2.02f\n", cost);
+            		System.out.println("The job took " + elapsedTime + " seconds to finish" );
 
             		revLineRead = new ReversedLinesFileReader(rawOutputFile, 4096, Charset.forName("UTF-8"));
-            //		System.out.println("First Line: " + revLineRead.readLine());
             		finalAverage = revLineRead.readLine();
-            //		System.out.println("Second Line: " + finalAverage.split("\\t")[0]);
             		
             		jsonObj.put(finalAverage.split("\\t")[0], finalAverage.split("\\t")[1]);
             		fileWriter = new FileWriter(outputFile);
@@ -435,8 +456,10 @@ public class AWSInterface {
             		fileWriter.close();
             		break;
             	}
-            	System.out.println("The job has ended with errors, please check the log");
+            	System.out.println("The job has ended with errors, please check the log in " + localLogDir);
+            	System.out.printf("Normalized instance hours: %d\n", normalized_hours);
             	System.out.printf("Approximate cost of this run = $%2.02f\n", cost);
+            	System.out.println("The job took " + elapsedTime + " seconds to finish" );
             	
             	break;
                 
@@ -453,8 +476,12 @@ public class AWSInterface {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-       
+    
         
     }
 	
+	
+	void close() {
+		transMan.shutdownNow();
+	}
 }
