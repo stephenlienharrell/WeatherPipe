@@ -55,12 +55,7 @@ public class WeatherPipe {
 			 // parse the command line arguments
 			 CommandLine line = parser.parse( options, args );
 			 
-			 //System.out.println(line.getOptionValue("start_time") + " " + line.getOptionValue("end_time"));
-			 
 
-			 
-			 System.out.println(bucketName);
-			 
 			 if( line.hasOption( "start_time" ) &&
 					 (line.getOptionValue("start_time") != null) ) {
 				startTime = DateTime.parse(
