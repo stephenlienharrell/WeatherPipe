@@ -1,0 +1,25 @@
+# Login to an sslab machine.
+
+# Create a directory call wp in your homedir
+mkdir wp
+cd wp
+
+# get gradle build system
+wget https://services.gradle.org/distributions/gradle-2.8-bin.zip
+unzip gradle-2.8-bin.zip 
+
+# put gradle into your path
+export PATH=$PATH:/homes/USERNAME/wp/gradle-2.8/bin
+
+# get weatherpipe
+git clone https://github.com/stephenlienharrell/CS307Team16.git
+
+# build weatherpipe
+cd CS307Team16/WeatherPipe
+gradle build
+
+# run weatherpipe (requires a credential file for aws)
+cd build/distributions/
+tar xfv WeatherPipe.tar 
+WeatherPipe/bin/WeatherPipe -s "01/01/2010 07:30:00" -e "01/01/2010 23:00:00" -st KAKQ
+
