@@ -7,7 +7,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -19,6 +18,9 @@ import edu.purdue.cs307.team16.RadarFilePicker;
 public class WeatherPipe {
 
 	public static void main(String[] args) {
+		
+		long startTimeOfProgram = System.currentTimeMillis();;
+		
 		 //final String dataBucket = "noaa-nexrad-level2";
 		 final String dateFormatString = "dd/MM/yyyy HH:mm:ss";
 		 final String dateDesc = "Date Format is " + dateFormatString;
@@ -132,6 +134,12 @@ public class WeatherPipe {
 		 System.out.println("Complete");
 		 
 		 awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
+		 
+		 long endTimeOfProgram = System.currentTimeMillis(); // returns milliseconds
+		 long elapsedTime = (endTimeOfProgram - startTimeOfProgram)/(1000);
+		 System.out.println("Elapsed time =" + elapsedTime + " seconds\n" );
+		 
+		 System.exit(1);
 	
 	}
 }
