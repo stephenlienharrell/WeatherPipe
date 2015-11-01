@@ -231,17 +231,19 @@ public class AWSInterface {
 		String uploadFileString = "";
 		InputStream uploadFileStream;
 		PrintWriter inputFile = null;
+		Long contentLength; 
 		
 		
 		for (String s : fileList)
 		{
 			uploadFileString += dataBucketName + " " + s + "\n";
 		}
-		
+		contentLength = new Long(uploadFileString.getBytes(Charset.forName("UTF-8")).length);
 		uploadFileStream = new ByteArrayInputStream(uploadFileString.getBytes(Charset.forName("UTF-8")));
-		
+
 		// may need to set content size
 		objMeta.setContentType("text/plain");
+		objMeta.setContentLength(contentLength);
 		try {
 			s3client.putObject(jobBucketName, key, uploadFileStream, objMeta);
         } catch (AmazonServiceException ase) {
