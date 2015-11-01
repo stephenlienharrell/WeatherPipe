@@ -343,6 +343,11 @@ public class AWSInterface {
 
 		TransferManager transMan = new TransferManager(s3client);
 		
+		if(instanceType == null) {
+			System.out.println("Instance type is being manually set\n");
+			instanceType = "c3.xlarge";
+		}
+		
         try {
             // Configure instances to use
             JobFlowInstancesConfig instances = new JobFlowInstancesConfig();
