@@ -20,15 +20,19 @@ public class MapReduceBuilder {
 	}
 	
 	String buildMapReduceJar() {
-		String weatherPipeJarLocation = weatherPipeMapReduceDir + "/build/libs/WeatherPipeMapReduce.jar";
+		String weatherPipeJarLocation;
 		Process command = null;
-		final String[] args = {gradleBinary, "build"};
 		final String[] env = { "JAVA_HOME=" + System.getProperty("java.home") };
 		BufferedReader buildOut;
 		String buildLine;	
 		
 		findGradlePath();
 		findWeatherPipeMapReduceBuildDir();
+		
+		weatherPipeJarLocation = weatherPipeMapReduceDir + "/build/libs/WeatherPipeMapReduce.jar";
+		final String[] args = {gradleBinary, "build"};
+		
+		
 		System.out.println("Attempting to build Map Reduce with");
 		System.out.println("gradle: " + gradleBinary);
 		System.out.println("build directory: " + weatherPipeMapReduceDir);
