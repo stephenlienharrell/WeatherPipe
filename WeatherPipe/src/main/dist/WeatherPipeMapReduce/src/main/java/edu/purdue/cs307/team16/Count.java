@@ -19,6 +19,7 @@ public class Count {
         Configuration conf = new Configuration();
         
         Job job = Job.getInstance(conf, "Count");
+        job.setNumReduceTasks(1);
         job.setJarByClass(Count.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
