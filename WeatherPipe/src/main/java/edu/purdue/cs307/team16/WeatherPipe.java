@@ -27,7 +27,7 @@ public class WeatherPipe {
 		 DateTime endTime = null;
 		 ArrayList<String> radarFileNames;
 		 String jobID = null; 
-		 AWSInterface awsInterface = new AWSInterface(jobID); 
+		 AWSInterface awsInterface = null;
 		 String jobHadoopJarURL, jobInputURL;
 		 String instanceType = null; //Make this a flag
 		 int instanceCount = 1; // Make this a flag
@@ -104,6 +104,7 @@ public class WeatherPipe {
 			 
 		 } catch( ParseException exp ) {
 			 System.out.println( "Unexpected exception:" + exp.getMessage() );
+			 System.exit(1);
 		 }
 		 
 		 String mapReduceJarLocation = builder.buildMapReduceJar();

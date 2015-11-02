@@ -153,10 +153,9 @@ public class AWSInterface {
         i = 0;
         while(jobDir.exists()) {
         	i++;
-        	
-        	jobDir = new File(jobDirName + "-" + i);
+        	jobDirName = jobDirName + "-" + i;
+        	jobDir = new File(jobDirName);
         }
-        if(i != 0) jobDirName = jobDirName + "-" + i;
         
         jobDir.mkdir();
         
@@ -449,7 +448,7 @@ public class AWSInterface {
             		revLineRead = new ReversedLinesFileReader(rawOutputFile, 4096, Charset.forName("UTF-8"));
             		finalAverage = revLineRead.readLine();
             		
-            		jsonObj.put(finalAverage.split("\\t")[0], finalAverage.split("\\t")[1]);
+            	//	jsonObj.put(finalAverage.split("\\t")[0], finalAverage.split("\\t")[1]);
             		fileWriter = new FileWriter(outputFile);
             		fileWriter.write(jsonObj.toString() + "\n");
             		fileWriter.flush();
