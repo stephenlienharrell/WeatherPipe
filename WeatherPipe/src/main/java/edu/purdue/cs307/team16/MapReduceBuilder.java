@@ -53,7 +53,7 @@ public class MapReduceBuilder {
 			while((buildLine = buildOut.readLine()) != null) {
 				System.out.println(buildLine);				
 			}
-			System.out.println();
+			
 		} catch (IOException e1) {
 			
 			// TODO Auto-generated catch block
@@ -71,7 +71,9 @@ public class MapReduceBuilder {
 			System.out.println("Map Reduce Jar Build Failed");
 			System.exit(1);
 		}
+		System.out.println();
 		System.out.println("Build completed");
+		System.out.println();
 		System.out.println("MapReduce jar location: " + weatherPipeJarLocation);
 		System.out.println();
 		
