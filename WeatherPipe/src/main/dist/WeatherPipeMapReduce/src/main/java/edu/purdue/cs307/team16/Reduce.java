@@ -31,36 +31,55 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
         int average = runningSum/numberOfDataPoints;
         context.write(new Text("Average"), new IntWritable(average));*/
     	
+    	String keyMessage = "**keyMessage:\n";
+    	String valueMessage = "**valueMessage\n";
     	
     	for(Text val : str) {
     		byte[] dataByte = null;
     	    
-    		Base64 b64 = new Base64();
+  
+    		Object obj =  null;
+    		dataByte = Base64.decodeBase64(val.toString()) ;
+    		obj = (MapReduceArraySerializer) SerializationUtils.deserialize(dataByte);
+    		MapReduceArraySerializer MAS = (MapReduceArraySerializer)obj;
     		
-    		if(b64.isBase64(val.toString())) {
+    		context.write(new Text("Average"), new Text(Arrays.toString(MAS.numbers)));
     		
-    			dataByte = b64.decodeBase64(val.toString()) ;
+    		return;
+/*
+    		if(Base64.isBase64(val.toString())) {
+    		
+    			dataByte = Base64.decodeBase64(val.toString()) ;
     	
-    		}
-    		else {
+    		} else {
+    //			context.write(new Text("not a base64 string"), new Text(val.toString()));
+    			return;
     			
-    			System.out.println("string is not base 64\n");
-    			
     		}
-        	assert(dataByte != null);
-        	Object obj = (MapReduceArraySerializer) SerializationUtils.deserialize(dataByte);
+        	if(dataByte != null) {
+        		obj = (MapReduceArraySerializer) SerializationUtils.deserialize(dataByte);
+        	} else {
+     //   		context.write(new Text("Error"), new Text("Object was null"));
+        		return;
+        	}
         	
         	if(obj instanceof MapReduceArraySerializer) {
         		MapReduceArraySerializer MAS = (MapReduceArraySerializer)obj;
         		System.out.println("Your object = " + Arrays.toString(MAS.numbers));
-        		context.write(new Text("Average"), new Text(Arrays.toString(MAS.numbers)));
+        		valueMessage = valueMessage + Arrays.toString(MAS.numbers) + "\n";
+        		
+        		
+        	} else {
+       // 		context.write(new Text("Error"), new Text("Your object is not an instance of MapReduceArraySerializer\n"));
+        		return;
         	}
-        	else {
-        		System.out.println("Your object is not an instance of MapReduceArraySerializer\n");
-        	}
-       		
+*/
     	}
+   // 	context.write(new Text("Average"), new Text(valueMessage));
+
     }
+
+    
     // use cleanup to do final sum average
 
     /*public void clean(Context context) {

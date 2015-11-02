@@ -144,22 +144,22 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
         	MapReduceArraySerializer l1 = new MapReduceArraySerializer(myIntArray);
         	byte[] databyte = SerializationUtils.serialize(l1);
         	
-        	Base64 b64 = new Base64();
-        	String byte_to_string = b64.encodeBase64String(databyte);
+        	String byte_to_string = Base64.encodeBase64String(databyte);
         	
         	
         	System.out.println("byte_to_string = " + byte_to_string + "\n");
           	assert(byte_to_string != null);
         	
         	
-        	word.set(key);
+        	word.set("Mapperid: " + String.valueOf(context.getTaskAttemptID().getTaskID().getId()));
+        			
         	data.set(byte_to_string);
         	
         	context.write(word, data);
         	
         }
         catch (Exception e) {
-            // Send signal
+        	context.write(new Text("Error"), new Text("exception happend"));
 
         }
     }
