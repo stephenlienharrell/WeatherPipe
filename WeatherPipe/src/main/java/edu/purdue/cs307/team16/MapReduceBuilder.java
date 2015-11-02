@@ -30,7 +30,7 @@ public class MapReduceBuilder {
 		findWeatherPipeMapReduceBuildDir();
 		
 		weatherPipeJarLocation = weatherPipeMapReduceDir + "/build/libs/WeatherPipeMapReduce.jar";
-		final String[] args = {gradleBinary, "build"};
+		final String[] args = {gradleBinary, "--no-daemon", "build"};
 		
 		
 		System.out.println("Attempting to build Map Reduce with");
@@ -53,6 +53,7 @@ public class MapReduceBuilder {
 			while((buildLine = buildOut.readLine()) != null) {
 				System.out.println(buildLine);				
 			}
+			System.out.println();
 		} catch (IOException e1) {
 			
 			// TODO Auto-generated catch block
