@@ -479,7 +479,10 @@ public class AWSInterface {
         
     }
 	
-	
+	public void addJobBucketName (String jobBucketName){
+		this.jobBucketName = jobBucketName;
+	}	
+
 	void close() {
 		transMan.shutdownNow();
 	}

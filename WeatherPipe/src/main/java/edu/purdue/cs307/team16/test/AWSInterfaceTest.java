@@ -94,4 +94,41 @@ public class AWSInterfaceTest extends TestCase {
 		assertArrayEquals(answer, ret);
 		System.out.println("UploadInputFileList() is ok");
 	}
+
+	@Test
+	public void testUploadMPJarFile() {
+		
+		MessageDigest md = null;
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
+		String isoDate = df.format(new Date());
+		String jobID = isoDate + "." + Calendar.getInstance().get(Calendar.MILLISECOND);
+		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
+		String userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+			md.update(userID.getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		byte[] shaHash = md.digest();
+
+		StringBuffer hexSha = new StringBuffer();
+		for (byte b : shaHash) {
+			hexSha.append(String.format("%02X", b));
+		}
+		String jobBucketName = "weatherpipe." + hexSha;
+		
+		awsInterface.addJobBucketName(jobBucketName);
+		String key = jobID + "WeatherPipeMapreduce.jar";
+		assertEquals("s3n://" + jobBucketName + "/" + key, awsInterface.UploadMPJarFile("WeatherPipeMapReduce.jar"));
+		
+		
+		
+		System.out.println("Test of \"UploadMPJarFile\" is passed");
+	}
 }
