@@ -27,6 +27,7 @@ import org.json.JSONObject;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -84,6 +85,7 @@ public class AWSInterface {
 	
 	private void AwsBootstrap(String job) {
 		AWSCredentials credentials;
+		ClientConfiguration conf;
 		String userID;
 		MessageDigest md = null;
 		byte[] shaHash;
@@ -96,16 +98,20 @@ public class AWSInterface {
 		File jobLogDir;
 		int i;
 		
+    	conf = new ClientConfiguration();
+    	// 2 minute timeout
+    	conf.setConnectionTimeout(120000);
+    	
 		credentials = new ProfileCredentialsProvider("default").getCredentials();
 		// TODO: add better credential searching later
 			
 		region = Region.getRegion(Regions.US_EAST_1);
-		s3client = new AmazonS3Client(credentials);
+		s3client = new AmazonS3Client(credentials, conf);
 		s3client.setRegion(region);
 		
 		transMan = new TransferManager(s3client);
 		
-		emrClient = new AmazonElasticMapReduceClient(credentials);
+		emrClient = new AmazonElasticMapReduceClient(credentials, conf);
 		emrClient.setRegion(region);
 		
 		if(jobBucketName == null) {
