@@ -126,9 +126,6 @@ public class AWSInterfaceTest extends TestCase {
 		awsInterface.addJobBucketName(jobBucketName);
 		String key = jobID + "WeatherPipeMapreduce.jar";
 		assertEquals("s3n://" + jobBucketName + "/" + key, awsInterface.UploadMPJarFile("WeatherPipeMapReduce.jar"));
-		
-		
-		
-		System.out.println("Test of \"UploadMPJarFile\" is passed");
+	
 	}
 }
