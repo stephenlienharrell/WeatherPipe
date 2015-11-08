@@ -3,7 +3,6 @@
 // https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/reference/netcdf4Clibrary.html
 
 apply plugin: 'java'
-//mainClassName = "edu.purdue.cs307.team16.Count"
 
 repositories {
     mavenCentral()
@@ -26,12 +25,12 @@ dependencies {
    compile 'commons-codec:commons-codec:1.10' 
 }
 
-
+// Create jar with all libraries embeded and set a main class
 jar {
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 
     manifest {
-        attributes 'Main-Class': "edu.purdue.cs307.team16.Count"
+        attributes 'Main-Class': "edu.purdue.cs307.team16.WeatherPipeMapReduce"
     }
 }
 apply plugin: 'eclipse'

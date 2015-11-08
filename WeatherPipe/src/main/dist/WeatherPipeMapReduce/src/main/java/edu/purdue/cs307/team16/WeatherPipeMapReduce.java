@@ -13,14 +13,14 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 // args : input path = args[0]
 //        output path = args[1]
 
-public class Count {
+public class WeatherPipeMapReduce {
 
 	public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         
         Job job = Job.getInstance(conf, "Count");
         job.setNumReduceTasks(1);
-        job.setJarByClass(Count.class);
+        job.setJarByClass(WeatherPipeMapReduce.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
         
