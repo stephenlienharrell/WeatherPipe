@@ -7,35 +7,34 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import edu.purdue.cs307.team16.RadarFilePicker;
-
-//import edu.purdue.cs307.team16.S3FileReadPrototype;
 		 
 public class WeatherPipe {
 
 	public static void main(String[] args) {
+		
 		 //final String dataBucket = "noaa-nexrad-level2";
 		 final String dateFormatString = "dd/MM/yyyy HH:mm:ss";
 		 final String dateDesc = "Date Format is " + dateFormatString;
 		 final DateTimeFormatter dateFormat = DateTimeFormat.forPattern(
 			dateFormatString);
-		 String dataBucket = null;
+		 String dataBucket = "noaa-nexrad-level2";
 		 DateTime startTime = null;
 		 DateTime endTime = null;
 		 ArrayList<String> radarFileNames;
 		 String jobID = null; 
-		 AWSInterface awsInterface = new AWSInterface(jobID); 
+		 AWSInterface awsInterface = null;
 		 String jobHadoopJarURL, jobInputURL;
-		 String hadoopJarFileName = "WeatherPipeMapReduce.jar"; // figure out how to automate this
 		 String instanceType = null; //Make this a flag
 		 int instanceCount = 1; // Make this a flag
-		 String bucketName;
-		 
+		 String bucketName = null;
+		 MapReduceBuilder builder = new MapReduceBuilder(null);
+
+		
 		 // create Options object
 		 Options options = new Options();
 		 CommandLineParser parser = new DefaultParser();
@@ -54,17 +53,7 @@ public class WeatherPipe {
 		 try {
 			 // parse the command line arguments
 			 CommandLine line = parser.parse( options, args );
-			 
-			 //System.out.println(line.getOptionValue("start_time") + " " + line.getOptionValue("end_time"));
-			 
-			 if( line.hasOption( "bucket_name" ) &&
-					 (line.getOptionValue("bucket_name") != null) ) {
-				 dataBucket = line.getOptionValue("bucket_name");
-			 } else {
-				System.out.println("Flag bucket_name is required");
-				System.exit(1);
-			 } 
-			 
+
 			 if( line.hasOption( "start_time" ) &&
 					 (line.getOptionValue("start_time") != null) ) {
 				startTime = DateTime.parse(
@@ -92,43 +81,39 @@ public class WeatherPipe {
 				System.exit(1);
 			 } 
 			 
-			 if( line.hasOption( "jobID" ) &&
-					 (line.getOptionValue("jobID") != null) ) {
+			 if( line.hasOption("jobID") ) {
 				 jobID = line.getOptionValue("jobID");
+			 }
+			 
+			 if( line.hasOption( "bucket_name" ) ){
+				 bucketName = line.getOptionValue("bucket_name");
+				 awsInterface = new AWSInterface(jobID, bucketName);
+
+			 } else {
 				 awsInterface = new AWSInterface(jobID);
-			 } else if (!line.hasOption( "jobID" )) {
-				 System.out.println("Flag jobID is null");
-			 } else {
-				System.out.println("Flag jobID is required");
-				System.exit(1);
-			 } 
+				 
+			 }
 			 
-			 if( line.hasOption( "instanceType" ) &&
-					 (line.getOptionValue("instanceType") != null) ) {
+			 if( line.hasOption( "instanceType" ) ) {
 				 instanceType = line.getOptionValue("instanceType");
-			 } else {
-				System.out.println("Flag instanceType is required");
-				System.exit(1);
+			 }
+			 
+			 if( line.hasOption( "instanceCount" ) ) {
+				 instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
 			 } 
 			 
-			 if( line.hasOption( "instanceCount" ) &&
-					 (line.getOptionValue("instanceCount") != null) ) {
-				 instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
-			 } else if (!line.hasOption( "instanceCount" )){
-				 instanceCount = 1;
-			 } else {
-				System.out.println("Flag instanceType is required");
-				System.exit(1);
-			 } 
 		 } catch( ParseException exp ) {
 			 System.out.println( "Unexpected exception:" + exp.getMessage() );
+			 System.exit(1);
 		 }
 		 
+		 String mapReduceJarLocation = builder.buildMapReduceJar();
+
 		 
 		 System.out.println("Searching NEXRAD Files");
 		 radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface, dataBucket);
 		 System.out.println("Found " + radarFileNames.size() + " NEXRAD Radar files between " + startTime.toString() + " and " + endTime.toString() );
-		 
+		 System.out.println();
 		 System.out.println("Search for/Create WeatherPipe S3 bucket");
 		 bucketName = awsInterface.FindOrCreateWeatherPipeJobBucket();
 		 if(bucketName == null) {
@@ -142,10 +127,11 @@ public class WeatherPipe {
 		 System.out.println("Complete");
 		 
 		 System.out.print("Uploading Jar file... ");
-		 jobHadoopJarURL = awsInterface.UploadMPJarFile(hadoopJarFileName);
+		 jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
 		 System.out.println("Complete");
-		 
+		 	 
 		 awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
-	
+		 
+		 awsInterface.close();
 	}
 }

@@ -19,12 +19,15 @@ public class Count {
         Configuration conf = new Configuration();
         
         Job job = Job.getInstance(conf, "Count");
+        job.setNumReduceTasks(1);
         job.setJarByClass(Count.class);
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
         
         job.setMapperClass(Map.class);
         job.setReducerClass(Reduce.class);
+        job.setSpeculativeExecution(false);
+        job.setReduceSpeculativeExecution(false);
         
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);

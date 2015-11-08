@@ -1,5 +1,5 @@
 package edu.purdue.cs307.team16;
-
+import java.io.Serializable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
@@ -7,6 +7,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
@@ -19,10 +20,15 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 
+
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
 
+import edu.purdue.cs307.team16.MapReduceArraySerializer;
+
+import org.apache.commons.codec.binary.BaseNCodec;
+import org.apache.commons.codec.binary.Base64;
 
 /*
     Input is of the form:
@@ -33,9 +39,10 @@ import ucar.nc2.NetcdfFile;
     At this point, I assume they are in the same bucket. 
 */
 
-public class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+
+public class Map extends Mapper<LongWritable, Text, Text, Text> {
 	
-    private IntWritable data = new IntWritable(1);
+    private Text data = new Text();
     private Text word = new Text();
     
 
@@ -71,10 +78,13 @@ public class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
 		//String key = "2010/01/01/KDDC/KDDC20100101_073731_V03.gz";
 		
 		//this format is for windows, please chanege this in your own machine
-		try {
+		/*try {
+			
+			
 			// Download required object from S3
 			// System.out.println("Downloading an object");
 			//S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
+			
 			object = s3.getObject(bucketName, key);
 			gunzip = new GZIPInputStream(object.getObjectContent());
 
@@ -86,18 +96,7 @@ public class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
 			try {
 				NetcdfFile ncfile = NetcdfFile.openInMemory(key, byteArrayStream.toByteArray());
 				
-				//Get the shape: length of Variable in each dimension.
-	//			for(int i = 0; i < ncfile.findVariable("Reflectivity").getRank();i++)
-	//			System.out.println("Reflectivity" + i + ": " + ncfile.findVariable("Reflectivity").getShape()[i]);
-				
-				/*
-				Variable v = ncfile.findVariable("Reflectivity");
-				System.out.println(v.getSize());
-				Array data = v.read();
-				//assert data.getSize() == 360720;
-				NCdumpW.printArray(data);
-				*/
-				
+			
 				
 				// SHAPE is 3, 360, 324
 				dataArray = ncfile.findVariable("Reflectivity").read();
@@ -106,10 +105,8 @@ public class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
 				dataByte = dataArray.getByte(dataIndex);
 				ncfile.close();
 
-			    
-				//System.out.println("Reflectivity: " + ncfile.getGlobalAttributes());
-				//System.out.println("Detial Information: " + ncfile.getDetailInfo());
-				//System.out.println("Variables: " + ncfile.getVariables());
+		
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
@@ -132,16 +129,37 @@ public class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
 					+ "such as not being able to access the network.");
 			System.out.println("Error Message: " + ace.getMessage());
 		}
-        
+        */
         
         try {
+        	
+        	/*
             word.set(key);
             assert(dataByte >= 0);
             data.set(dataByte);
             context.write(word, data);
+            */
+        	
+        	int[] myIntArray = new int[]{1,2,3};
+        	MapReduceArraySerializer l1 = new MapReduceArraySerializer(myIntArray);
+        	byte[] databyte = SerializationUtils.serialize(l1);
+        	
+        	String byte_to_string = Base64.encodeBase64String(databyte);
+        	
+        	
+        	System.out.println("byte_to_string = " + byte_to_string + "\n");
+          	assert(byte_to_string != null);
+        	
+        	
+        	word.set("Mapperid: " + String.valueOf(context.getTaskAttemptID().getTaskID().getId()));
+        			
+        	data.set(byte_to_string);
+        	
+        	context.write(word, data);
+        	
         }
         catch (Exception e) {
-            // Send signal
+        	context.write(new Text("Error"), new Text("exception happend"));
 
         }
     }
