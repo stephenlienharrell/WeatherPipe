@@ -101,7 +101,7 @@ public class RadarFilePicker {
 			addFile(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
 		}
 		else {
-			System.out.println(days);
+			//System.out.println(days);
 			for(int i = 0; i <= days; i++) {
 				if(i == 0) {
 					lowBound = start.toString("yyyyMMdd_HHmmss");
