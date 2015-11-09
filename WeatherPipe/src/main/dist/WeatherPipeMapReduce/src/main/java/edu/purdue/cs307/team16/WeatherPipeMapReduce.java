@@ -18,17 +18,18 @@ public class WeatherPipeMapReduce {
 	public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         
-        Job job = Job.getInstance(conf, "Count");
-        job.setNumReduceTasks(1);
+        Job job = Job.getInstance(conf, "WeatherPipeMapReduce");
+        
+        job.setSpeculativeExecution(false);
+        job.setReduceSpeculativeExecution(false);
         job.setJarByClass(WeatherPipeMapReduce.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
-        
+        job.setNumReduceTasks(1);
         job.setMapperClass(Map.class);
         job.setReducerClass(Reduce.class);
         job.setSpeculativeExecution(false);
         job.setReduceSpeculativeExecution(false);
-        
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         
