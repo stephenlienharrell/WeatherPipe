@@ -20,12 +20,10 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
     	
     	for(Text val : str) {
     		byte[] dataByte = null;
-    		Object obj =  null;
+    		MapReduceSerializer obj;
     		dataByte = Base64.decodeBase64(val.toString());
-    		System.out.println(val.toString());
     		obj = (MapReduceSerializer) SerializationUtils.deserialize(dataByte);
-    		MapReduceSerializer MAS = (MapReduceSerializer)obj;
-    		analysis.reduce(MAS.serializeMe);
+    		analysis.reduce(obj.serializeMe);
     		passNum++;
     	}
     	
