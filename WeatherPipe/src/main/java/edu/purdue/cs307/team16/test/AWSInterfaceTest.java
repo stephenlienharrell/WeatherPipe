@@ -25,7 +25,7 @@ import edu.purdue.cs307.team16.RadarFilePicker;
 import junit.framework.TestCase;
 
 public class AWSInterfaceTest extends TestCase {
-	/*@Test
+	@Test
 	public void testListBucket() {
 		final String dataBucket = "noaa-nexrad-level2";
 		String[] key = {"2010/01/01", "2010/07/14"};
@@ -55,14 +55,13 @@ public class AWSInterfaceTest extends TestCase {
 		String answer = "s3n://fdgfhfdx/";
 		assertEquals(answer, output);
 		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
-		// TODO: add better credential searching later
 			
 		Region region = Region.getRegion(Regions.US_EAST_1);
 		AmazonS3Client s3client = new AmazonS3Client(credentials);
 		s3client.setRegion(region);
 		s3client.deleteBucket(bucketName);
 		System.out.println("FindOrCreateWeatherPipeJobBucket() is ok");
-	}*/
+	}
 	
 	@Test
 	public void testUploadInputFileList() {
