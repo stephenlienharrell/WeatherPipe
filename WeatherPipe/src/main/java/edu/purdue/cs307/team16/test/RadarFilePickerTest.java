@@ -71,5 +71,15 @@ public class RadarFilePickerTest extends TestCase {
 		System.out.println("GetRadarFilesFromTimeRange() is ok");
 	}
 
-	
+	@Test
+	public void testCheckStationType(){
+		String s = null;
+		assertTrue(RadarFilePicker.checkStationType("KAKQ"));
+		
+		assertFalse(RadarFilePicker.checkStationType(""));
+		assertFalse(RadarFilePicker.checkStationType(s));
+		assertFalse(RadarFilePicker.checkStationType("kakq"));
+		assertFalse(RadarFilePicker.checkStationType("kak"));
+		assertFalse(RadarFilePicker.checkStationType("kakaq"));
+	}
 }

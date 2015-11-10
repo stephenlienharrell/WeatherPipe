@@ -5,12 +5,19 @@ import static org.junit.Assert.assertArrayEquals;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.AmazonClientException;
@@ -92,5 +99,39 @@ public class AWSInterfaceTest extends TestCase {
 		String[] answer = {"s3n://fdafda/job1_input", "s3n://adfeth/job2_input"};
 		assertArrayEquals(answer, ret);
 		System.out.println("UploadInputFileList() is ok");
+	}
+
+	@Test
+	public void testUploadMPJarFile() {
+		
+		MessageDigest md = null;
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
+		String isoDate = df.format(new Date());
+		String jobID = isoDate + "." + Calendar.getInstance().get(Calendar.MILLISECOND);
+		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
+		String userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+			md.update(userID.getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		byte[] shaHash = md.digest();
+
+		StringBuffer hexSha = new StringBuffer();
+		for (byte b : shaHash) {
+			hexSha.append(String.format("%02X", b));
+		}
+		String jobBucketName = "weatherpipe." + hexSha;
+		
+		awsInterface.addJobBucketName(jobBucketName);
+		String key = jobID + "WeatherPipeMapreduce.jar";
+		assertEquals("s3n://" + jobBucketName + "/" + key, awsInterface.UploadMPJarFile("WeatherPipeMapReduce.jar"));
+	
 	}
 }
