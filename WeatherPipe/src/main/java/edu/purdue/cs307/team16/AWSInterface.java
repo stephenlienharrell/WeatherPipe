@@ -1,8 +1,10 @@
 package edu.purdue.cs307.team16;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,13 +65,15 @@ public class AWSInterface {
 	private AmazonS3 s3client;
 	private TransferManager transMan;
 	private Region region;
-	private String jobDirName;
+	public String jobDirName;
 	private String jobSetupDirName;
 	private String jobLogDirName;
 	//private String defaultInstance = "c3.xlarge";
 
 	private String jobBucketName = null;
 	private String jobID;
+	
+	public String jobOutput;
 	
 	
 
@@ -180,7 +184,7 @@ public class AWSInterface {
 		List<S3ObjectSummary> summaries = listing.getObjectSummaries();
 
 		while (listing.isTruncated()) {
-		   listing = s3client.listNextBatchOfObjects (listing);
+		   listing = s3client.listNextBatchOfObjects(listing);
 		   summaries.addAll(listing.getObjectSummaries());
 		}
 		
@@ -344,17 +348,15 @@ public class AWSInterface {
 		DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest();
 		DescribeClusterResult describeClusterResult;
 		File rawOutputFile = new File(jobDirName + "/" + jobID + "_raw_map_reduce_output");
-		File outputFile = new File(jobDirName + "/" + jobID + "_output");
 		File localLogDir = new File(jobLogDirName);
 		int normalized_hours;
 		double cost;
 		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
+		String line;
 		
 
-		ReversedLinesFileReader revLineRead;
-		String finalAverage;
-		JSONObject jsonObj = new JSONObject();
-		FileWriter fileWriter; 
+		BufferedReader lineRead;
+
 		MultipleFileDownload logDirDownload;
 
 		startTimeOfProgram = System.currentTimeMillis();
@@ -441,25 +443,30 @@ public class AWSInterface {
             	
         		
             	
-            	if(!lastState.endsWith("ERRORS")) {	
-            		// TODO ABSTRACT THIS FILE WRITER OUT!         		
+            	if(!lastState.endsWith("ERRORS")) {	   		
             		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), rawOutputFile);
             		
             		
-            		System.out.println("The job has ended and output has been downloaded to " + localLogDir);
+            		System.out.println("The job has ended and output has been downloaded to " + jobDirName);
             		System.out.printf("Normalized instance hours: %d\n", normalized_hours);
             		System.out.printf("Approximate cost of this run: $%2.02f\n", cost);
             		System.out.println("The job took " + elapsedTime + " seconds to finish" );
 
-            		revLineRead = new ReversedLinesFileReader(rawOutputFile, 4096, Charset.forName("UTF-8"));
-            		finalAverage = revLineRead.readLine();
+            		lineRead = new BufferedReader(new FileReader(rawOutputFile));
             		
-            	//	jsonObj.put(finalAverage.split("\\t")[0], finalAverage.split("\\t")[1]);
-            		fileWriter = new FileWriter(outputFile);
-            		fileWriter.write(jsonObj.toString() + "\n");
-            		fileWriter.flush();
-            		fileWriter.close();
-            		break;
+            		jobOutput = "";
+            		while((line = lineRead.readLine()) != null) {
+            			if(line.startsWith("Run")) {
+            				jobOutput = "";
+            				jobOutput = line.split("\\t")[1];
+            			} else {
+            				jobOutput = jobOutput + "\n" + line;
+            			}
+            			
+            		}
+
+            		System.out.println(jobOutput);
+
             	}
             	System.out.println("The job has ended with errors, please check the log in " + localLogDir);
             	System.out.printf("Normalized instance hours: %d\n", normalized_hours);

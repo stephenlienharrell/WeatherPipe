@@ -1,5 +1,7 @@
 package edu.purdue.cs307.team16;
 
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 import org.apache.commons.cli.Options;
@@ -29,6 +31,7 @@ public class WeatherPipe {
 	public static int instanceCount; 
 	public static String bucketName = null;
 	public static String station = null;
+	public static WeatherPipeFileWriter fileWriter = new  WeatherPipeFileWriter();
 
 	public static void main(String[] args) {
 
@@ -37,6 +40,7 @@ public class WeatherPipe {
 		addFlags(args);		
 
 		String mapReduceJarLocation = builder.buildMapReduceJar();
+		
 
 		System.out.println("Searching NEXRAD Files");
 		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface,
@@ -62,6 +66,15 @@ public class WeatherPipe {
 
 		awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
+		try {
+			fileWriter.writeOutput(awsInterface.jobOutput, awsInterface.jobDirName, mapReduceJarLocation);
+		} catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException
+				| InstantiationException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		awsInterface.close();
 	}
 

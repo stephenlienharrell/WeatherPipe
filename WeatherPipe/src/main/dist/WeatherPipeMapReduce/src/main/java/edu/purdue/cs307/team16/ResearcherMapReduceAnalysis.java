@@ -1,12 +1,18 @@
 package edu.purdue.cs307.team16;
 
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.json.JSONObject;
 
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
+
+
+// Example of a single scalar average at a specific point 
+// in space over time
 
 public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<Double, Double> {
 	
@@ -14,8 +20,7 @@ public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<Double, Doubl
 		super();
 	}
 	
-	
-	public Double mapAnalyze(NetcdfFile nexradNetCDF) {
+	protected Double mapAnalyze(NetcdfFile nexradNetCDF) {
 		
 		Array dataArray;
 		Index dataIndex;
@@ -52,5 +57,26 @@ public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<Double, Doubl
 		average = runningSum/numberOfDataPoints;
 		return average;
 	}
+	
+
+	protected void outputFileWriter(Double reduceOutput, String outputDir) {
+		String outputFile = outputDir + "/jsonOutputFile";
+		JSONObject jsonObj = new JSONObject();
+		FileWriter fileWriter;
+		
+		jsonObj.put("Average", reduceOutput.toString());
+		
+		try {
+			fileWriter = new FileWriter(outputFile);
+			fileWriter.write(jsonObj.toString() + "\n");
+			fileWriter.flush();
+			fileWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+	}
+	
 
 }
