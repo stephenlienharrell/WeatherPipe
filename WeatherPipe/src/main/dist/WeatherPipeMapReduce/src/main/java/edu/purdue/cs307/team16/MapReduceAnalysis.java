@@ -1,6 +1,5 @@
 package edu.purdue.cs307.team16;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.apache.commons.codec.binary.Base64;
@@ -25,10 +24,14 @@ public abstract class MapReduceAnalysis<MT, RT> {
 
 	protected abstract MT mapAnalyze(NetcdfFile nexradNetCDF);
 	
-	public void reduce(Object input) throws IOException {
+	public void reduce(String input) throws IOException {
+		byte[] dataByte;
+		MapReduceSerializer obj;
+		dataByte = Base64.decodeBase64(input);
+		obj = (MapReduceSerializer) SerializationUtils.deserialize(dataByte);
 		if(input == null) throw new IOException("Input of analysis reduce is null");
 		@SuppressWarnings("unchecked")
-		RT genericObject = reduceAnalyze((MT) input);
+		RT genericObject = reduceAnalyze((MT) obj.serializeMe);
 		serializer = new MapReduceSerializer(genericObject);
 	}	
 	
@@ -36,10 +39,10 @@ public abstract class MapReduceAnalysis<MT, RT> {
 	
 	@SuppressWarnings("unchecked")
 	public void writeFile(String input, String outputDir) throws IOException {
+		byte[] dataByte;
 		MapReduceSerializer obj;
-		ByteArrayInputStream byteStream;
-		byteStream = new ByteArrayInputStream(Base64.decodeBase64(input));
-		obj = (MapReduceSerializer) SerializationUtils.deserialize(byteStream);
+		dataByte = Base64.decodeBase64(input);
+		obj = (MapReduceSerializer) SerializationUtils.deserialize(dataByte);
 		outputFileWriter((RT) obj.serializeMe, outputDir);
 	}
 

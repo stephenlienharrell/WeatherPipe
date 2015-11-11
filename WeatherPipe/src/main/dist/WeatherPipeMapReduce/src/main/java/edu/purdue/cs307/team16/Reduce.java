@@ -1,6 +1,7 @@
 package edu.purdue.cs307.team16;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.io.*;
@@ -18,14 +19,11 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text keyname, Iterable<Text> str, Context context) throws IOException, InterruptedException {
 		if(analysis == null) analysis = new ResearcherMapReduceAnalysis();
     	
-    	for(Text val : str) {
-    		byte[] dataByte = null;
-    		MapReduceSerializer obj;
-    		dataByte = Base64.decodeBase64(val.toString());
-    		obj = (MapReduceSerializer) SerializationUtils.deserialize(dataByte);
-    		analysis.reduce(obj.serializeMe);
+    	for(Text val : str) {	
+    		analysis.reduce(val.toString());
     		passNum++;
     	}
+    	System.out.println("Final array: " + Arrays.toString((double[])analysis.serializer.serializeMe));
     	
        	byte[] databyte = SerializationUtils.serialize(analysis.serializer);      	
        	String byte_to_string = Base64.encodeBase64String(databyte);

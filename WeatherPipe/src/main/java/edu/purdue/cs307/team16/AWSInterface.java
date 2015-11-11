@@ -464,8 +464,7 @@ public class AWSInterface {
             			}
             			
             		}
-
-            		System.out.println(jobOutput);
+            		break;
 
             	}
             	System.out.println("The job has ended with errors, please check the log in " + localLogDir);
