@@ -1,8 +1,12 @@
 package edu.purdue.cs307.team16.test;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -62,6 +66,7 @@ public class AWSInterfaceTest extends TestCase {
 		String answer = "s3n://fdgfhfdx/";
 		assertEquals(answer, output);
 		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
+		// TODO: add better credential searching later
 			
 		Region region = Region.getRegion(Regions.US_EAST_1);
 		AmazonS3Client s3client = new AmazonS3Client(credentials);
@@ -99,10 +104,15 @@ public class AWSInterfaceTest extends TestCase {
 		String[] answer = {"s3n://fdafda/job1_input", "s3n://adfeth/job2_input"};
 		assertArrayEquals(answer, ret);
 		System.out.println("UploadInputFileList() is ok");
+		
+		
 	}
-
 	@Test
-	public void testUploadMPJarFile() {
+	public void testUploadMPJarFile() throws IOException {
+		byte[] dataToWrite = {1,2,3,4,5};
+		FileOutputStream out = new FileOutputStream("WeatherPipeMapreduce.jar");
+		out.write(dataToWrite);
+		out.close();
 		
 		MessageDigest md = null;
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
@@ -132,6 +142,5 @@ public class AWSInterfaceTest extends TestCase {
 		awsInterface.addJobBucketName(jobBucketName);
 		String key = jobID + "WeatherPipeMapreduce.jar";
 		assertEquals("s3n://" + jobBucketName + "/" + key, awsInterface.UploadMPJarFile("WeatherPipeMapReduce.jar"));
-	
 	}
 }
