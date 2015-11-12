@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
+import ucar.nc2.Variable;
 
 public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<double[], double[]> {
 	
@@ -25,7 +26,9 @@ public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<double[], dou
 		// SHAPE is 3, 360, 324
 
 		try {
-			dataArray = nexradNetCDF.findVariable("Reflectivity").read();
+			Variable netcdf = nexradNetCDF.findVariable("Reflectivity");
+			if(netcdf == null) return null;
+			dataArray = netcdf.read();
 	    	dataIndex = dataArray.getIndex();
 	    	// get shape
 	    	int[] shape = dataArray.getShape();	
@@ -55,14 +58,22 @@ public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<double[], dou
 	int numberOfDataPoints = 0;
 	
 	protected double[] reduceAnalyze(double[] input) {
-		double[] averageArray = new double[input.length];
+		int length;
+		if(input == null && numberOfDataPoints == 0) return new double[1];
 		
 		if(runningSumsArray == null) runningSumsArray = new double[input.length];
-	
-		numberOfDataPoints++;
+		double[] averageArray = new double[runningSumsArray.length];
+		
+		if(input != null) numberOfDataPoints++;
+		
+		if(input == null || input.length > runningSumsArray.length) length = runningSumsArray.length;
+		else length = input.length;
+		
+		
+		
 
-		for(int i = 0; i < input.length; i++) {
-			runningSumsArray[i] += input[i];
+		for(int i = 0; i < length; i++) {
+			if(input != null) runningSumsArray[i] += input[i];
 			averageArray[i] = runningSumsArray[i]/numberOfDataPoints;
 		}
 
