@@ -19,7 +19,7 @@ public class MapReduceBuilder {
 		}
 	}
 	
-	String buildMapReduceJar() {
+	public String buildMapReduceJar() {
 		String weatherPipeJarLocation;
 		Process command = null;
 		final String[] env = { "JAVA_HOME=" + System.getProperty("java.home") };

@@ -14,6 +14,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import edu.purdue.cs307.team16.RadarFilePicker;
+import edu.purdue.cs307.team16.test.TestAll;
+import junit.textui.TestRunner;
 
 public class WeatherPipe {
 	// final String dataBucket = "noaa-nexrad-level2";
@@ -100,6 +102,7 @@ public class WeatherPipe {
 		options.addOption("i_T", "instanceType", true,
 				"instanceType of analysis. The instanceType looks like \"c3.xlarge\". ");
 		options.addOption("i_C", "instanceCount", true, "instanceCount of analysis. ");
+		options.addOption("t", "test", true, "TestAll");
 
 		try {
 			// parse the command line arguments
@@ -148,11 +151,18 @@ public class WeatherPipe {
 			} else {
 				instanceCount = 1;
 			}
+			if (line.hasOption("test")) {
+				 TestRunner.run(TestAll.suite());
+			}
 
 		} catch (ParseException exp) {
-			System.out.println("Unexpected exception:" + exp.getMessage());
+			System.out.println("Unexpected exception: " + exp.getMessage());
+			System.exit(1);
+		} catch (IllegalArgumentException e){
+			System.out.println("Illegal Arguments with invalid format: " + e.getMessage());
 			System.exit(1);
 		}
+		
 
 	}
 }
