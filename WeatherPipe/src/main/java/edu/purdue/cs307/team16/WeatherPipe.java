@@ -45,6 +45,11 @@ public class WeatherPipe {
 		System.out.println("Searching NEXRAD Files");
 		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface,
 				dataBucket);
+		RadarFilePicker.executor.shutdown();
+		while (!RadarFilePicker.executor.isTerminated()) {}
+		//System.out.println("Finished all threads");
+		
+		
 		System.out.println("Found " + radarFileNames.size() + " NEXRAD Radar files between " + startTime.toString()
 				+ " and " + endTime.toString());
 		System.out.println();
