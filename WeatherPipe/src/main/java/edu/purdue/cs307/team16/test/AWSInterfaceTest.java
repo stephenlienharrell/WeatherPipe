@@ -32,7 +32,6 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 
 import edu.purdue.cs307.team16.AWSInterface;
-import edu.purdue.cs307.team16.MapReduceBuilder;
 import edu.purdue.cs307.team16.RadarFilePicker;
 import junit.framework.TestCase;
 
@@ -110,25 +109,18 @@ public class AWSInterfaceTest extends TestCase {
 	}
 	@Test
 	public void testUploadMPJarFile() throws IOException {
-		AWSInterface awsInterface = null;
+		byte[] dataToWrite = {1,2,3,4,5};
+		FileOutputStream out = new FileOutputStream("WeatherPipeMapreduce.jar");
+		out.write(dataToWrite);
+		out.close();
 		
-		MapReduceBuilder builder = new MapReduceBuilder(null);
-		String mapReduceJarLocation = builder.buildMapReduceJar();
-		
-		
-		String bucketName = awsInterface.FindOrCreateWeatherPipeJobBucket();
-		/*MessageDigest md = null;
+		MessageDigest md = null;
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
 		String isoDate = df.format(new Date());
 		String jobID = isoDate + "." + Calendar.getInstance().get(Calendar.MILLISECOND);
 		AWSInterface awsInterface = new AWSInterface(jobID);
 		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
 		String userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
-		*/
-		
-		String jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
-		//System.out.println(jobHadoopJarURL);
-		/*
 		try {
 			md = MessageDigest.getInstance("SHA-256");
 			md.update(userID.getBytes("UTF-8"));
@@ -149,8 +141,6 @@ public class AWSInterfaceTest extends TestCase {
 		
 		awsInterface.addJobBucketName(jobBucketName);
 		String key = jobID + "WeatherPipeMapreduce.jar";
-		*/
-		assertEquals(jobHadoopJarURL, awsInterface.UploadMPJarFile(mapReduceJarLocation));
-		System.out.println("UploadMPJarFile is ok");
+		assertEquals("s3n://" + jobBucketName + "/" + key, awsInterface.UploadMPJarFile("WeatherPipeMapReduce.jar"));
 	}
 }
