@@ -81,5 +81,6 @@ public class RadarFilePickerTest extends TestCase {
 		assertFalse(RadarFilePicker.checkStationType("kakq"));
 		assertFalse(RadarFilePicker.checkStationType("kak"));
 		assertFalse(RadarFilePicker.checkStationType("kakaq"));
+		System.out.println("CheckStationType is ok");
 	}
 }
