@@ -57,7 +57,7 @@ import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 
 
-public class AWSInterface {
+public class AWSInterface extends MapReduceInterface {
 
   
 	private String jobBucketNamePrefix = "weatherpipe";
@@ -191,7 +191,7 @@ public class AWSInterface {
 		return summaries;
 	}
 	
-	public String FindOrCreateWeatherPipeJobBucket() {
+	public String FindOrCreateWeatherPipeJobDirectory() {
 		String bucketLocation = null;
 
 		try {
@@ -238,7 +238,7 @@ public class AWSInterface {
 		return bucketLocation;	
 	}
 	
-	public String UploadInputFileList(ArrayList<String> fileList, String dataBucketName) {
+	public String UploadInputFileList(ArrayList<String> fileList, String dataDirName) {
 		
 		String key = jobID + "_input";
 		ObjectMetadata objMeta = new ObjectMetadata();
@@ -250,7 +250,7 @@ public class AWSInterface {
 		
 		for (String s : fileList)
 		{
-			uploadFileString += dataBucketName + " " + s + "\n";
+			uploadFileString += dataDirName + " " + s + "\n";
 		}
 		contentLength = new Long(uploadFileString.getBytes(Charset.forName("UTF-8")).length);
 		uploadFileStream = new ByteArrayInputStream(uploadFileString.getBytes(Charset.forName("UTF-8")));
@@ -333,7 +333,7 @@ public class AWSInterface {
 		return "s3n://" + jobBucketName + "/" + key;
 	}
 
-	public void CreateEMRJob(String jobInputS3Location, String jobJarS3Location, int numInstances, String instanceType) {
+	public void CreateMRJob(String jobInputLocation, String jobJarLocation, int numInstances, String instanceType) {
 		
 		// Modified from https://mpouttuclarke.wordpress.com/2011/06/24/how-to-run-an-elastic-mapreduce-job-using-the-java-sdk/
 		
@@ -343,7 +343,7 @@ public class AWSInterface {
 		String flowName = "WeatherPipe_" + jobID;
 		String logS3Location = "s3n://" + jobBucketName + "/" + jobID + ".log";
 		String outS3Location = "s3n://" + jobBucketName + "/" + jobID + "_output";
-		String[] arguments = new String[] {jobInputS3Location, outS3Location};
+		String[] arguments = new String[] {jobInputLocation, outS3Location};
 		List<String> jobArguments = Arrays.asList(arguments);
 		DescribeClusterRequest describeClusterRequest = new DescribeClusterRequest();
 		DescribeClusterResult describeClusterResult;
@@ -395,12 +395,12 @@ public class AWSInterface {
       
             request.setJobFlowRole("EMR_EC2_DefaultRole");
 
-            System.out.println("\tusing jar URI: " + jobJarS3Location);
-            HadoopJarStepConfig jarConfig = new HadoopJarStepConfig(jobJarS3Location);
+            System.out.println("\tusing jar URI: " + jobJarLocation);
+            HadoopJarStepConfig jarConfig = new HadoopJarStepConfig(jobJarLocation);
             System.out.println("\tusing args: " + jobArguments);
             jarConfig.setArgs(jobArguments);
             StepConfig stepConfig =
-                new StepConfig(jobJarS3Location.substring(jobJarS3Location.indexOf('/') + 1),
+                new StepConfig(jobJarLocation.substring(jobJarLocation.indexOf('/') + 1),
                                jarConfig);
             request.setSteps(Arrays.asList(new StepConfig[] { stepConfig }));
             System.out.println("Configured hadoop jar succesfully!\n");

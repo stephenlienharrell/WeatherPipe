@@ -54,7 +54,7 @@ public class WeatherPipe {
 				+ " and " + endTime.toString());
 		System.out.println();
 		System.out.println("Search for/Create WeatherPipe S3 bucket");
-		bucketName = awsInterface.FindOrCreateWeatherPipeJobBucket();
+		bucketName = awsInterface.FindOrCreateWeatherPipeJobDirectory();
 		if (bucketName == null) {
 			System.out.println("Bucket was not created correctly");
 			System.exit(1);
@@ -69,7 +69,7 @@ public class WeatherPipe {
 		jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
 		System.out.println("Complete");
 
-		awsInterface.CreateEMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
+		awsInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
 		try {
 			fileWriter.writeOutput(awsInterface.jobOutput, awsInterface.jobDirName, mapReduceJarLocation);

@@ -57,13 +57,13 @@ public class AWSInterfaceTest extends TestCase {
 	@Test
 	public void testFindOrCreateWeatherPipeJobBucket() {
 		String jobID = null; 
-		String bucketName = "fdgfhfdx";
+		String bucketName = "fdgfhfdx2";
 		AWSInterface awsInterface = new AWSInterface(jobID);
 		jobID = "job1";
 		awsInterface = new AWSInterface(jobID, bucketName);
 		String output;
-		output = awsInterface.FindOrCreateWeatherPipeJobBucket();
-		String answer = "s3n://fdgfhfdx/";
+		output = awsInterface.FindOrCreateWeatherPipeJobDirectory();
+		String answer = "s3n://fdgfhfdx2/";
 		assertEquals(answer, output);
 		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
 		// TODO: add better credential searching later
@@ -89,19 +89,19 @@ public class AWSInterfaceTest extends TestCase {
 		final String dataBucket = "noaa-nexrad-level2";
 		String[] jobID = {"job1", "job2"};
 		//jobID = "job1";
-		String[] bucketName = {"fdafda", "adfeth"};
+		String[] bucketName = {"fdafda2", "adfeth2"};
 		AWSInterface[] awsInterface = {new AWSInterface(jobID[0], bucketName[0]), new AWSInterface(jobID[1], bucketName[1])};
 		//awsInterface.FindOrCreateWeatherPipeJobBucket();
 		//AWSInterface awsInterface = new AWSInterface(jobID);
 		String[] ret = new String[2];
 		for(int i = 0; i < 2; i++) {
-			awsInterface[i].FindOrCreateWeatherPipeJobBucket();
+			awsInterface[i].FindOrCreateWeatherPipeJobDirectory();
 			fileList1.add(RadarFilePicker.getRadarFilesFromTimeRange(startTimes[i], endTimes[i], station, awsInterface[i], dataBucket));
 			ret[i] = awsInterface[i].UploadInputFileList(fileList1.get(i), dataBucket);
 		}
 		
 		
-		String[] answer = {"s3n://fdafda/job1_input", "s3n://adfeth/job2_input"};
+		String[] answer = {"s3n://fdafda2/job1_input", "s3n://adfeth2/job2_input"};
 		assertArrayEquals(answer, ret);
 		System.out.println("UploadInputFileList() is ok");
 		
