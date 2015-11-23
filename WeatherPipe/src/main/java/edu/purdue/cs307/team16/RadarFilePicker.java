@@ -234,7 +234,7 @@ public class RadarFilePicker {
 
 
 
-	static ExecutorService executor = Executors.newFixedThreadPool(5);
+	static ExecutorService executor = Executors.newFixedThreadPool(50);
 
 	public static void addFileThreadHelper(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
 		Runnable addFileThread = new RadarFileAdder(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
