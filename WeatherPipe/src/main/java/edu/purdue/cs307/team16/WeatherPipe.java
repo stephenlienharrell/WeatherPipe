@@ -26,7 +26,6 @@ public class WeatherPipe {
 	static ArrayList<String> radarFileNames;
 	public static String jobID = null;
 	static AWSInterface awsInterface = null;
-	static LocalInterface localInterface = null;
 	static String jobHadoopJarURL, jobInputURL;
 	public static String instanceType = null; 
 	public static int instanceCount; 
@@ -44,7 +43,7 @@ public class WeatherPipe {
 		
 
 		System.out.println("Searching NEXRAD Files");
-		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, localInterface,
+		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface,
 				dataBucket);
 		RadarFilePicker.executor.shutdown();
 		while (!RadarFilePicker.executor.isTerminated()) {}
@@ -55,7 +54,7 @@ public class WeatherPipe {
 				+ " and " + endTime.toString());
 		System.out.println();
 		System.out.println("Search for/Create WeatherPipe S3 bucket");
-		bucketName = localInterface.FindOrCreateWeatherPipeJobDirectory();
+		bucketName = awsInterface.FindOrCreateWeatherPipeJobDirectory();
 		if (bucketName == null) {
 			System.out.println("Bucket was not created correctly");
 			System.exit(1);
@@ -63,14 +62,14 @@ public class WeatherPipe {
 		System.out.println("Using bucket " + bucketName);
 
 		System.out.print("Uploading Input file... ");
-		jobInputURL = localInterface.UploadInputFileList(radarFileNames, dataBucket);
+		jobInputURL = awsInterface.UploadInputFileList(radarFileNames, dataBucket);
 		System.out.println("Complete");
 
 		System.out.print("Uploading Jar file... ");
-		jobHadoopJarURL = localInterface.UploadMPJarFile(mapReduceJarLocation);
+		jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
 		System.out.println("Complete");
 
-		localInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
+		awsInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
 		/*try {
 			fileWriter.writeOutput(awsInterface.jobOutput, awsInterface.jobDirName, mapReduceJarLocation);
@@ -133,10 +132,10 @@ public class WeatherPipe {
 
 			if (line.hasOption("bucket_name")) {
 				bucketName = line.getOptionValue("bucket_name");
-				localInterface = new LocalInterface();
+				awsInterface = new AWSInterface(jobID, bucketName);
 
 			} else {
-				localInterface = new LocalInterface();
+				awsInterface = new AWSInterface(jobID);
 
 			}
 
