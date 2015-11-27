@@ -1,5 +1,6 @@
 package edu.purdue.cs307.team16;
 
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,6 +20,12 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
+
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class LocalInterface extends MapReduceInterface {
 
@@ -123,6 +130,23 @@ public class LocalInterface extends MapReduceInterface {
 	}
 
 
+	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
+		
+		AmazonS3 s3client = new AmazonS3Client(new ProfileCredentialsProvider());  
+		
+		System.out.println("bucketname = " + bucketName + "key =" + key);
+		ObjectListing listing = s3client.listObjects( bucketName, key );
+		List<S3ObjectSummary> summaries = listing.getObjectSummaries();
+
+		while (listing.isTruncated()) {
+			listing = s3client.listNextBatchOfObjects(listing);
+			summaries.addAll(listing.getObjectSummaries());
+		}
+
+		return summaries;
+	}
+
+
 	// create directory on hdfs dfs 
 	public String FindOrCreateWeatherPipeJobDirectory() {
 
@@ -212,6 +236,8 @@ public class LocalInterface extends MapReduceInterface {
 
 	public String UploadMPJarFile(String fileLocation) {
 
+		// no need to upload to Hathi, is used from local node
+
 		String jarFilename = jobID + "WeatherPipeMapreduce.jar";
 		File jarFile = new File(fileLocation);
 
@@ -224,7 +250,8 @@ public class LocalInterface extends MapReduceInterface {
 		}
 
 
-		// setup hathi
+		// setup hathi // not needed
+		/*
 		String [] commands = {"bash", "-c", "hdfs dfs -copyFromLocal " + 
 				jobSetupDirName + "/" + jarFilename + " " + "$RCAC_SCRATCH/" + hathiFolder + "/"};
 
@@ -241,16 +268,47 @@ public class LocalInterface extends MapReduceInterface {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		 */
 
-
-		return hathiFolder + "/" + jarFilename;
+		return jobSetupDirName + "/" + jarFilename;
 	}
 
 	public void CreateMRJob(String jobInputLocation, String jobJarLocation, int numInstances, String instanceType) {
 
+		String outputFilename = jobID + "_output";
+
+		jobOutput = hathiFolder + "/" + outputFilename;
+		System.out.println("jobOutput = " + jobOutput);
+
+		String [] commands = {"bash", "-c", "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput};
+		String line;
+
+		Process p;
+		try {
+			p = Runtime.getRuntime().exec(commands);
+			BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			InputStream error = p.getErrorStream();
+
+			while((line = in.readLine()) != null) {
+				System.out.println(line);
+				line = null;
+			}
+
+			p.waitFor();
+			System.out.println(in.readLine());
+			if(error.available() != 0) {
+				System.err.print("MR Job failed");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+
 	}
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		LocalInterface l = new LocalInterface();
 		System.out.println("hathiFolder = " + l.FindOrCreateWeatherPipeJobDirectory());
 		ArrayList<String> fileList = new ArrayList<String>();
@@ -261,7 +319,7 @@ public class LocalInterface extends MapReduceInterface {
 		String dataDirName = "noaa-nexrad-level2";
 
 		System.out.println("inputFileDirectory = " + l.UploadInputFileList(fileList, dataDirName));
-		
+
 		System.out.println("jarFileDirectory = " + l.UploadMPJarFile("hello"));
-	}
+	}*/
 }

@@ -26,6 +26,7 @@ public class WeatherPipe {
 	static ArrayList<String> radarFileNames;
 	public static String jobID = null;
 	static AWSInterface awsInterface = null;
+	static LocalInterface localInterface = null;
 	static String jobHadoopJarURL, jobInputURL;
 	public static String instanceType = null; 
 	public static int instanceCount; 
@@ -43,7 +44,7 @@ public class WeatherPipe {
 		
 
 		System.out.println("Searching NEXRAD Files");
-		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface,
+		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, localInterface,
 				dataBucket);
 		RadarFilePicker.executor.shutdown();
 		while (!RadarFilePicker.executor.isTerminated()) {}
@@ -54,7 +55,7 @@ public class WeatherPipe {
 				+ " and " + endTime.toString());
 		System.out.println();
 		System.out.println("Search for/Create WeatherPipe S3 bucket");
-		bucketName = awsInterface.FindOrCreateWeatherPipeJobDirectory();
+		bucketName = localInterface.FindOrCreateWeatherPipeJobDirectory();
 		if (bucketName == null) {
 			System.out.println("Bucket was not created correctly");
 			System.exit(1);
@@ -62,25 +63,25 @@ public class WeatherPipe {
 		System.out.println("Using bucket " + bucketName);
 
 		System.out.print("Uploading Input file... ");
-		jobInputURL = awsInterface.UploadInputFileList(radarFileNames, dataBucket);
+		jobInputURL = localInterface.UploadInputFileList(radarFileNames, dataBucket);
 		System.out.println("Complete");
 
 		System.out.print("Uploading Jar file... ");
-		jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
+		jobHadoopJarURL = localInterface.UploadMPJarFile(mapReduceJarLocation);
 		System.out.println("Complete");
 
-		awsInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
+		localInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
-		try {
+		/*try {
 			fileWriter.writeOutput(awsInterface.jobOutput, awsInterface.jobDirName, mapReduceJarLocation);
 		} catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException
 				| InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		
-		awsInterface.close();
+		//awsInterface.close();
 	}
 
 	public static void addFlags(String[] args) {
@@ -132,10 +133,10 @@ public class WeatherPipe {
 
 			if (line.hasOption("bucket_name")) {
 				bucketName = line.getOptionValue("bucket_name");
-				awsInterface = new AWSInterface(jobID, bucketName);
+				localInterface = new LocalInterface();
 
 			} else {
-				awsInterface = new AWSInterface(jobID);
+				localInterface = new LocalInterface();
 
 			}
 
