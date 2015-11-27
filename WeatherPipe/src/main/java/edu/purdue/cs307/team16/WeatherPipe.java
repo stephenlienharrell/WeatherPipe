@@ -71,16 +71,16 @@ public class WeatherPipe {
 
 		awsInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
-		/*try {
+		try {
 			fileWriter.writeOutput(awsInterface.jobOutput, awsInterface.jobDirName, mapReduceJarLocation);
 		} catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException
 				| InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 		
-		//awsInterface.close();
+		awsInterface.close();
 	}
 
 	public static void addFlags(String[] args) {
