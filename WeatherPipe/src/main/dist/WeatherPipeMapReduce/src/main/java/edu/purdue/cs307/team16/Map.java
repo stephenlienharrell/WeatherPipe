@@ -66,6 +66,7 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
 		S3ObjectInputStream objectInputStream;
 		Level level;
 		Logger logger;
+		NetcdfFile ncfile = null;
 
 		ResearcherMapReduceAnalysis analysis = null;
 		
@@ -99,18 +100,17 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
 				
 			}
 			
-			NetcdfFile ncfile = NetcdfFile.openInMemory(key, byteArrayStream.toByteArray());
-			analysis = new ResearcherMapReduceAnalysis();
-			analysis.map(ncfile);
-			ncfile.close();
-			byteArrayStream.close();
+			ncfile = NetcdfFile.openInMemory(key, byteArrayStream.toByteArray());
+
 				
 		}
 		
 		catch (IOException ioe) {
 			System.out.println(ExceptionUtils.getStackTrace(ioe));
-			System.exit(1);
+			ncfile = null;
 		}
+
+		
 		catch (AmazonServiceException ase) {
 			System.out.println("Caught an AmazonServiceException, which means your request made it "
 					+ "to Amazon S3, but was rejected with an error response for some reason.");
@@ -119,21 +119,21 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
 			System.out.println("AWS Error Code:   " + ase.getErrorCode());
 			System.out.println("Error Type:       " + ase.getErrorType());
 			System.out.println("Request ID:       " + ase.getRequestId());
-			System.exit(1);
 		} 
 		catch (AmazonClientException ace) {
 			System.out.println("Caught an AmazonClientException, which means the client encountered "
 					+ "a serious internal problem while trying to communicate with S3, "
 					+ "such as not being able to access the network.");
 			System.out.println("Error Message: " + ace.getMessage());
-			System.exit(1);
 		}
-        
+		analysis = new ResearcherMapReduceAnalysis();
+		if (!analysis.map(ncfile)) {
+			analysis.serializer.serializeMe = null;
+		} else {
+			ncfile.close();
+		}
+		byteArrayStream.close();
            
-       	if (analysis == null) {
-       		System.out.println("Serializer not instantiated");
-       		System.exit(1);
-       	}
         	
        	byte[] databyte = SerializationUtils.serialize(analysis.serializer);      	
        	String byte_to_string = Base64.encodeBase64String(databyte);

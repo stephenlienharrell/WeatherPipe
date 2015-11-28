@@ -17,22 +17,29 @@ public abstract class MapReduceAnalysis<MT, RT> {
 
 	}
 	
-	public void map(NetcdfFile nexradNetCDF) throws IOException {
-		MT genericObject = mapAnalyze(nexradNetCDF);
-		serializer = new MapReduceSerializer(genericObject);
+	public Boolean map(NetcdfFile nexradNetCDF) throws IOException {
+		if(!(nexradNetCDF == null)) {
+			MT genericObject = mapAnalyze(nexradNetCDF);
+			serializer = new MapReduceSerializer(genericObject);
+			return true;
+		}
+		serializer = new MapReduceSerializer(null);		
+		return false;
+
 	}	
 
 	protected abstract MT mapAnalyze(NetcdfFile nexradNetCDF);
 	
-	public void reduce(String input) throws IOException {
+	public Boolean reduce(String input) throws IOException {
 		byte[] dataByte;
 		MapReduceSerializer obj;
 		dataByte = Base64.decodeBase64(input);
 		obj = (MapReduceSerializer) SerializationUtils.deserialize(dataByte);
-		if(input == null) throw new IOException("Input of analysis reduce is null");
+		if(input == null) return false;
 		@SuppressWarnings("unchecked")
 		RT genericObject = reduceAnalyze((MT) obj.serializeMe);
 		serializer = new MapReduceSerializer(genericObject);
+		return true;
 	}	
 	
 	protected abstract RT reduceAnalyze(MT input);
@@ -48,7 +55,5 @@ public abstract class MapReduceAnalysis<MT, RT> {
 
 	protected abstract void outputFileWriter(RT input, String outputDir);
 		
-
-
 
 }

@@ -1,16 +1,12 @@
 package edu.purdue.cs307.team16;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -22,16 +18,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.input.ReversedLinesFileReader;
-import org.json.JSONObject;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.event.ProgressEvent;
+import com.amazonaws.event.ProgressListener;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce;
@@ -51,10 +46,11 @@ import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.HeadBucketRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.Upload;
 
 
 public class AWSInterface extends MapReduceInterface {
@@ -74,6 +70,7 @@ public class AWSInterface extends MapReduceInterface {
 	private String jobID;
 	
 	public String jobOutput;
+	private int bytesTransfered = 0;
 	
 	
 
@@ -178,6 +175,46 @@ public class AWSInterface extends MapReduceInterface {
 		jobLogDir.mkdir();
 	}
 	
+	private void UploadFileToS3(String jobBucketName, String key, File file) {
+		Upload upload;
+		PutObjectRequest request;
+		
+		request = new PutObjectRequest(
+				jobBucketName, key, file);
+		
+		
+
+		bytesTransfered = 0;
+		// Subscribe to the event and provide event handler.        
+		request.setGeneralProgressListener(new ProgressListener() {
+
+			@Override
+			public void progressChanged(ProgressEvent progressEvent) {
+				bytesTransfered += progressEvent.getBytesTransferred();
+				
+			}
+
+		});
+		
+		System.out.println();
+		upload = transMan.upload(request);
+		
+		while(!upload.isDone()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				continue;
+			}
+			
+			System.out.print("\rTransfered: " + bytesTransfered/1024 + "K / " + file.length()/1024 + "K");
+		}
+		// If we got an error the count could be off
+		System.out.print("\rTransfered: " + bytesTransfered/1024 + "K / " + bytesTransfered/1024 + "K");
+		System.out.println();
+		System.out.println("Transfer Complete");
+
+	}
+	
 	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
 		
 		ObjectListing listing = s3client.listObjects( bucketName, key );
@@ -241,48 +278,16 @@ public class AWSInterface extends MapReduceInterface {
 	public String UploadInputFileList(ArrayList<String> fileList, String dataDirName) {
 		
 		String key = jobID + "_input";
-		ObjectMetadata objMeta = new ObjectMetadata();
 		String uploadFileString = "";
-		InputStream uploadFileStream;
 		PrintWriter inputFile = null;
-		Long contentLength; 
+		File file = new File(jobSetupDirName + "/" + key);
 		
 		
-		for (String s : fileList)
-		{
-			uploadFileString += dataDirName + " " + s + "\n";
-		}
-		contentLength = new Long(uploadFileString.getBytes(Charset.forName("UTF-8")).length);
-		uploadFileStream = new ByteArrayInputStream(uploadFileString.getBytes(Charset.forName("UTF-8")));
-
-		// may need to set content size
-		objMeta.setContentType("text/plain");
-		objMeta.setContentLength(contentLength);
-		try {
-			s3client.putObject(jobBucketName, key, uploadFileStream, objMeta);
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which " +
-            		"means your request made it " +
-                    "to Amazon S3, but was rejected with an error response" +
-                    " for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-            System.exit(1);
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which " +
-            		"means the client encountered " +
-                    "an internal error while trying to " +
-                    "communicate with S3, " +
-                    "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
-            System.exit(1);
-        }		
+		for (String s : fileList) uploadFileString += dataDirName + " " + s + "\n";
+	
 		
 		try {
-			inputFile = new PrintWriter(jobSetupDirName + "/" + key);
+			inputFile = new PrintWriter(file);
 			inputFile.print(uploadFileString);
 			inputFile.close();
 		} catch (FileNotFoundException e) {
@@ -290,6 +295,8 @@ public class AWSInterface extends MapReduceInterface {
 			e.printStackTrace();
 			System.exit(1);
 		}	
+		
+		UploadFileToS3(jobBucketName, key, file);
 		
 		return "s3n://" + jobBucketName + "/" + key;
 	}
@@ -299,28 +306,7 @@ public class AWSInterface extends MapReduceInterface {
 		String key = jobID + "WeatherPipeMapreduce.jar";
 		File jarFile = new File(fileLocation);
 		
-		try {
-			s3client.putObject(jobBucketName, key, jarFile);
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which " +
-            		"means your request made it " +
-                    "to Amazon S3, but was rejected with an error response" +
-                    " for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-            System.exit(1);
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which " +
-            		"means the client encountered " +
-                    "an internal error while trying to " +
-                    "communicate with S3, " +
-                    "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
-            System.exit(1);
-        }		
+		UploadFileToS3(jobBucketName, key, jarFile);
 		
 		try {
 			FileUtils.copyFile(new File(fileLocation), new File(jobSetupDirName + "/" + key));
@@ -421,7 +407,7 @@ public class AWSInterface extends MapReduceInterface {
             	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
             	Cluster cluster = describeClusterResult.getCluster();
             	lastState = cluster.getStatus().getState();
-            	System.out.println("Current State of Cluster: " + lastState);
+            	System.out.print("\rCurrent State of Cluster: " + lastState);
             	if(!lastState.startsWith("TERMINATED")) {
             		continue;
             	}
@@ -440,7 +426,7 @@ public class AWSInterface extends MapReduceInterface {
         		while(!logDirDownload.isDone()) {
         			Thread.sleep(1000);
         		}
-            	
+        		System.out.println();
         		
             	
             	if(!lastState.endsWith("ERRORS")) {	   		
