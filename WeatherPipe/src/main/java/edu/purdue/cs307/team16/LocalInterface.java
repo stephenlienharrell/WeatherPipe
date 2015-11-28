@@ -14,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -37,9 +38,11 @@ public class LocalInterface extends MapReduceInterface {
 	public String jobDirName;
 	private String jobSetupDirName;
 	private String jobLogDirName;
+	public String jobOutputDirName;
 	File jobDir;
 	File jobSetupDir;
 	File jobLogDir;
+	File jobOutputDir;
 
 
 	// name of folder 	
@@ -66,7 +69,7 @@ public class LocalInterface extends MapReduceInterface {
 			while((user = in.readLine()) != null) {
 				break;
 			}
-			System.out.println("user = "  + user);
+			//System.out.println("user = "  + user);
 			in.close();
 
 			String [] commands2 = {"bash", "-c", "echo $RCAC_SCRATCH" };
@@ -76,7 +79,7 @@ public class LocalInterface extends MapReduceInterface {
 			while((rcacScratch = in2.readLine()) != null) {
 				break;
 			}
-			System.out.println("rcacScratch = "  + rcacScratch );
+			//System.out.println("rcacScratch = "  + rcacScratch );
 			in2.close();
 			//md = MessageDigest.getInstance("SHA-256");
 			//md.update(user.getBytes("UTF-8"));
@@ -102,7 +105,7 @@ public class LocalInterface extends MapReduceInterface {
 		 */
 
 		hathiFolder = "WeatherPipeRuns";
-		System.out.println("hathiFolder name = " + hathiFolder);
+		//System.out.println("hathiFolder name = " + hathiFolder);
 
 		// generate jobID
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
@@ -130,6 +133,11 @@ public class LocalInterface extends MapReduceInterface {
 		jobLogDirName = jobDirName + "/" + "logs";
 		jobLogDir = new File(jobLogDirName);
 		jobLogDir.mkdir();
+		
+		jobOutputDirName = jobDirName + "/output";
+		jobOutputDir = new File(jobOutputDirName);
+		jobOutputDir.mkdir();
+		
 	}
 
 
@@ -170,7 +178,7 @@ public class LocalInterface extends MapReduceInterface {
 			p.waitFor();
 			String out = null;
 			if((out = in.readLine()) != null) {
-				System.out.println("out = " + out);
+				//System.out.println("out = " + out);
 				folderExists = true;
 			}
 		} catch(IOException e) {
@@ -179,13 +187,13 @@ public class LocalInterface extends MapReduceInterface {
 			e.printStackTrace();
 		}
 
-		System.out.println("folderExists = " + folderExists);
+		//System.out.println("folderExists = " + folderExists);
 
 		if(!folderExists) {
 			// create hathiFolder
 
 			try {
-				System.out.println("creating hathiFolder");
+				//System.out.println("creating hathiFolder");
 				p = Runtime.getRuntime().exec("hdfs dfs -mkdir " + hathiFolder);
 				p.waitFor();
 				folderExists = true;
@@ -204,11 +212,15 @@ public class LocalInterface extends MapReduceInterface {
 
 		// make string
 		String inputFilename = jobID + "_input";
-		String printString = null;
+		String printString = "";
 
-
+		boolean first = true;
 		for(String s : fileList) {
-			printString += dataDirName + " " + s + "\n";
+			if(!first) {
+				printString += "\n";
+			}
+			printString += dataDirName + " " + s;
+			first = false;
 		}
 
 		// setup local
@@ -290,35 +302,60 @@ public class LocalInterface extends MapReduceInterface {
 		jobOutput = hathiFolder + "/" + outputFilename;
 		System.out.println("jobOutput = " + jobOutput);
 		
-		
-		System.out.println("running: " +  "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput);
+		//System.out.println("running: " +  "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput);
 		String [] commands = {"bash", "-c", "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput};
-		String line = null;
+		
+		
+		ProcessBuilder pb = new ProcessBuilder(commands);
+		pb.redirectErrorStream(true);
 
-		Process p;
+		Process proc = null;
 		try {
-			p = Runtime.getRuntime().exec(commands);
-			BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			InputStream error = p.getErrorStream();
+			proc = pb.start();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		System.out.println("Map Reduce starting ... !");
 
-			while((line = in.readLine()) != null) {
-				System.out.println(line);
-				line = null;
-			}
-
-			p.waitFor();
-			System.out.println(in.readLine());
-			if(error.available() != 0) {
-				System.out.println(error.toString());
-				System.err.print("MR Job failed");
+		String line;             
+		BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));             
+		try {
+			while ((line = in.readLine()) != null) {
+			    System.out.println(line);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 
-
+		
+		proc.destroy();
+		System.out.println("Map Reduce ending ... !");
+		
+		
+		
+		// copy files back into local directory
+		String [] commands2 = {"bash", "-c", "hdfs dfs -copyToLocal " + 
+				jobOutput + "/* " + jobOutputDirName + "/"};
+		//System.out.println("commands2 =" + Arrays.toString(commands2));
+		System.out.println("Downloading output files");
+		
+		ProcessBuilder pb2 = new ProcessBuilder(commands2);
+		pb.redirectErrorStream(true);
+		Process proc2 = null;
+		try {
+			proc2 = pb2.start();
+			proc2.waitFor();
+			proc2.destroy();
+			
+			jobOutput = jobOutputDirName;
+			System.out.println("jobOutput = " + jobOutput);
+			
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		} 
+		
+		System.out.println("job ended ...");
+		
 	}
 
 	/*public static void main(String[] args) {
