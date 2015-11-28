@@ -32,7 +32,7 @@ public class RadarFilePicker {
 		Object synchronizedHelper;
 
 
-		RadarFileAdder(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
+		RadarFileAdder(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, MapReduceInterface mrInterface, String dataBucket) {
 			this.lowBound = lowBound;
 			this.uppBound = uppBound;
 			this.station = station;
@@ -117,7 +117,7 @@ public class RadarFilePicker {
 	}
 
 
-	public static void addFile(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
+	public static void addFile(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, MapReduceInterface mrInterface, String dataBucket) {
 		int index = -1;	//used to find the index of '-' in the file name.
 		int compInt1 = 0;	//used to compare the date
 		int compInt2 = 0;	//used to compare the date
@@ -135,7 +135,7 @@ public class RadarFilePicker {
 		arr2 = uppBound.split("_");
 		try {
 
-			List<S3ObjectSummary> summaries = awsInterface.ListBucket(dataBucket, key);
+			List<S3ObjectSummary> summaries = mrInterface.ListBucket(dataBucket, key);
 			for (S3ObjectSummary objectSummary : summaries) {
 
 				index = objectSummary.getKey().indexOf('.');
@@ -183,7 +183,7 @@ public class RadarFilePicker {
 		}
 	}
 
-	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, AWSInterface awsInterface, String dataBucket){
+	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, MapReduceInterface mrInterface, String dataBucket){
 		String lowBound = start.toString("yyyyMMdd_HHmmss");
 		String uppBound = end.toString("yyyyMMdd_HHmmss");
 		ret = new ArrayList<String>();
@@ -202,7 +202,7 @@ public class RadarFilePicker {
 		if(days == 0) {
 			//System.out.println("days = 0");
 			key = lowBound.substring(0, 4) + "/" + lowBound.substring(4, 6) + "/" + lowBound.substring(6, 8);
-			addFile(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
+			addFile(ret, lowBound, uppBound, station, key, mrInterface, dataBucket);
 		}
 		else {
 			//System.out.println("days = " + days);
@@ -224,7 +224,7 @@ public class RadarFilePicker {
 					uppBound = temp.substring(0, 9) + "235959";
 					key = temp.substring(0, 4) + "/" + temp.substring(4, 6) + "/" + temp.substring(6, 8);
 				}
-				addFileThreadHelper(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
+				addFileThreadHelper(ret, lowBound, uppBound, station, key, mrInterface, dataBucket);
 
 			}
 		}
@@ -236,8 +236,8 @@ public class RadarFilePicker {
 
 	static ExecutorService executor = Executors.newFixedThreadPool(50);
 
-	public static void addFileThreadHelper(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
-		Runnable addFileThread = new RadarFileAdder(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
+	public static void addFileThreadHelper(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, MapReduceInterface mrInterface, String dataBucket) {
+		Runnable addFileThread = new RadarFileAdder(ret, lowBound, uppBound, station, key, mrInterface, dataBucket);
 		executor.execute(addFileThread);
 	}
 
