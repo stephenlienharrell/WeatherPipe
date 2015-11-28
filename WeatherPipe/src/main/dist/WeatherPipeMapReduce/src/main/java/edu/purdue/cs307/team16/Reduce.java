@@ -20,7 +20,7 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 		if(analysis == null) analysis = new ResearcherMapReduceAnalysis();
     	
     	for(Text val : str) {	
-    		analysis.reduce(val.toString());
+    		if(!(analysis.reduce(val.toString()) == true)) continue;
     		passNum++;
     	}
     	System.out.println("Final array: " + Arrays.toString((double[])analysis.serializer.serializeMe));
