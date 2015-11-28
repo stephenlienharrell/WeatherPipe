@@ -30,12 +30,13 @@ public class RadarFilePicker {
 		Object synchronizedHelper;
 
 
-		RadarFileAdder(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSAnonInterface awsInterface, String dataBucket) {
+		RadarFileAdder(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSAnonInterface awsAnonInterface, String dataBucket) {
 			this.lowBound = lowBound;
 			this.uppBound = uppBound;
 			this.station = station;
 			this.key = key;
-			this.awsInterface = awsInterface;
+			this.awsInterface = awsAnonInterface;
+			//this.awsInterface = awsInterface;
 			this.dataBucket = dataBucket;
 		}
 
