@@ -21,9 +21,12 @@ import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -131,17 +134,24 @@ public class LocalInterface extends MapReduceInterface {
 
 
 	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
-		
-		AmazonS3 s3client = new AmazonS3Client(new ProfileCredentialsProvider());  
-		
-		System.out.println("bucketname = " + bucketName + "key =" + key);
-		ObjectListing listing = s3client.listObjects( bucketName, key );
-		List<S3ObjectSummary> summaries = listing.getObjectSummaries();
 
-		while (listing.isTruncated()) {
-			listing = s3client.listNextBatchOfObjects(listing);
-			summaries.addAll(listing.getObjectSummaries());
-		}
+		AWSCredentials creds = new AnonymousAWSCredentials();
+		AmazonS3 s3client = new AmazonS3Client(creds);  
+
+		//System.out.println("bucketname = " + bucketName + "key =" + key);
+
+		ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(bucketName).withPrefix(key);
+		List<S3ObjectSummary> summaries = new ArrayList<S3ObjectSummary>();
+
+		ObjectListing objectListing;
+
+		do {
+			objectListing = s3client.listObjects(listObjectsRequest);
+			for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+				summaries.add(objectSummary);
+			}
+			listObjectsRequest.setMarker(objectListing.getNextMarker());
+		} while (objectListing.isTruncated());
 
 		return summaries;
 	}
@@ -279,9 +289,11 @@ public class LocalInterface extends MapReduceInterface {
 
 		jobOutput = hathiFolder + "/" + outputFilename;
 		System.out.println("jobOutput = " + jobOutput);
-
+		
+		
+		System.out.println("running: " +  "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput);
 		String [] commands = {"bash", "-c", "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput};
-		String line;
+		String line = null;
 
 		Process p;
 		try {
@@ -297,6 +309,7 @@ public class LocalInterface extends MapReduceInterface {
 			p.waitFor();
 			System.out.println(in.readLine());
 			if(error.available() != 0) {
+				System.out.println(error.toString());
 				System.err.print("MR Job failed");
 			}
 		} catch (IOException e) {
