@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import edu.purdue.cs307.team16.AWSAnonInterface;
 import edu.purdue.cs307.team16.AWSInterface;
 import edu.purdue.cs307.team16.RadarFilePicker;
 import junit.framework.TestCase;
@@ -31,9 +32,10 @@ public class RadarFilePickerTest extends TestCase {
 		final String dataBucket = "noaa-nexrad-level2";
 		final String jobID = null;
 		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		int[] size = new int[2];
 		for(int i = 0; i < 2; i++) {
-			RadarFilePicker.addFile(ret, lowBound[i], uppBound[i], station, key[i], awsInterface, dataBucket);
+			RadarFilePicker.addFile(ret, lowBound[i], uppBound[i], station, key[i], awsAnonInterface, dataBucket);
 			size[i] = ret.size();
 			ret.clear();
 		}
@@ -57,12 +59,13 @@ public class RadarFilePickerTest extends TestCase {
 				new DateTime(2011, 01, 01, 15, 27, 48) };
 		final String jobID = null;
 		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		String station = "KBBX";
 		ArrayList<String> radarFileNames;
 		// int size;
 		for (int i = 0; i < 3; i++) {
 			radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTimes[i], endTimes[i], station,
-					awsInterface, dataBucket);
+					awsAnonInterface, dataBucket);
 			// size = radarFileNames.size();
 			output[i] = radarFileNames.size();
 		}

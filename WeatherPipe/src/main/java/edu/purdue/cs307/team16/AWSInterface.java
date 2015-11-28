@@ -24,6 +24,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressListener;
@@ -215,19 +216,6 @@ public class AWSInterface extends MapReduceInterface {
 
 	}
 	
-	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
-		
-		ObjectListing listing = s3client.listObjects( bucketName, key );
-		List<S3ObjectSummary> summaries = listing.getObjectSummaries();
-
-		while (listing.isTruncated()) {
-		   listing = s3client.listNextBatchOfObjects(listing);
-		   summaries.addAll(listing.getObjectSummaries());
-		}
-		
-		return summaries;
-	}
-	
 	public String FindOrCreateWeatherPipeJobDirectory() {
 		String bucketLocation = null;
 
@@ -339,6 +327,7 @@ public class AWSInterface extends MapReduceInterface {
 		double cost;
 		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
 		String line;
+		int i;
 		
 
 		BufferedReader lineRead;
@@ -403,13 +392,17 @@ public class AWSInterface extends MapReduceInterface {
             String lastState = "";
             while (true)
             {
-            	Thread.sleep(10000);
             	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
             	Cluster cluster = describeClusterResult.getCluster();
             	lastState = cluster.getStatus().getState();
-            	System.out.print("\rCurrent State of Cluster: " + lastState);
+            	System.out.print("\rCurrent State of Cluster: " + lastState + "                   ");
             	if(!lastState.startsWith("TERMINATED")) {
             		continue;
+            	} else {	
+            		for(i = 0; i < 10; i++) {
+            			System.out.print(".");
+            			Thread.sleep(1000);
+            		}
             	}
             	
             	// it reaches here when the emr has "terminated"

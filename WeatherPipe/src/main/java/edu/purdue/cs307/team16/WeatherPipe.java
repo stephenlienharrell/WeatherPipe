@@ -25,7 +25,8 @@ public class WeatherPipe {
 	public static DateTime endTime = null;
 	static ArrayList<String> radarFileNames;
 	public static String jobID = null;
-	static AWSInterface awsInterface = null;
+	public static AWSInterface awsInterface = null;
+	public static AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 	static String jobHadoopJarURL, jobInputURL;
 	public static String instanceType = null; 
 	public static int instanceCount; 
@@ -50,7 +51,7 @@ public class WeatherPipe {
 		
 
 		System.out.println("Searching NEXRAD Files");
-		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface,
+		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsAnonInterface,
 				dataBucket);
 		RadarFilePicker.executor.shutdown();
 		while (!RadarFilePicker.executor.isTerminated()) {}
