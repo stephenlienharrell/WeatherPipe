@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -16,7 +17,6 @@ import org.joda.time.format.DateTimeFormatter;
 import edu.purdue.cs307.team16.RadarFilePicker;
 
 public class WeatherPipe {
-	// final String dataBucket = "noaa-nexrad-level2";
 	final static String dateFormatString = "dd/MM/yyyy HH:mm:ss";
 	final static String dateDesc = "Date Format is " + dateFormatString;
 	final static DateTimeFormatter dateFormat = DateTimeFormat.forPattern(dateFormatString);
@@ -32,8 +32,15 @@ public class WeatherPipe {
 	public static String bucketName = null;
 	public static String station = null;
 	public static WeatherPipeFileWriter fileWriter = new  WeatherPipeFileWriter();
+	
+	
+
 
 	public static void main(String[] args) {
+		String weatherPipeBinaryPath = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String log4jConfPath = weatherPipeBinaryPath.substring(0, weatherPipeBinaryPath.lastIndexOf("/")) + "/log4j.properties";
+
+		PropertyConfigurator.configure(log4jConfPath);
 
 		MapReduceBuilder builder = new MapReduceBuilder(null);
 		
@@ -63,11 +70,9 @@ public class WeatherPipe {
 
 		System.out.print("Uploading Input file... ");
 		jobInputURL = awsInterface.UploadInputFileList(radarFileNames, dataBucket);
-		System.out.println("Complete");
 
 		System.out.print("Uploading Jar file... ");
 		jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
-		System.out.println("Complete");
 
 		awsInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
