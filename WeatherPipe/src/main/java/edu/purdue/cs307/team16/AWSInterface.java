@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.PropertyConfigurator;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -77,6 +78,9 @@ public class AWSInterface extends MapReduceInterface {
 
 	
 	public AWSInterface(String job){
+		String weatherPipeBinaryPath = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String log4jConfPath = weatherPipeBinaryPath.substring(0, weatherPipeBinaryPath.lastIndexOf("/")) + "/log4j.properties";
+		PropertyConfigurator.configure(log4jConfPath);
 		AwsBootstrap(job);
 	}
 	

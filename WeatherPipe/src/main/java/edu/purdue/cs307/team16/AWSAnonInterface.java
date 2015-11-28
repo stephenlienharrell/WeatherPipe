@@ -2,6 +2,8 @@ package edu.purdue.cs307.team16;
 
 import java.util.List;
 
+import org.apache.log4j.PropertyConfigurator;
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -21,6 +23,9 @@ public class AWSAnonInterface {
 	AmazonS3 s3AnonClient;
 	
 	public AWSAnonInterface() {
+		String weatherPipeBinaryPath = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String log4jConfPath = weatherPipeBinaryPath.substring(0, weatherPipeBinaryPath.lastIndexOf("/")) + "/log4j.properties";
+		PropertyConfigurator.configure(log4jConfPath);
 		AWSCredentials creds = new AnonymousAWSCredentials();
 		s3AnonClient = new AmazonS3Client(creds);  
 	}
