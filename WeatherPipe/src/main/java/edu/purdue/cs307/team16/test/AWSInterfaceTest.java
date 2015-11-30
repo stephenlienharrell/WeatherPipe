@@ -31,6 +31,7 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 
+import edu.purdue.cs307.team16.AWSAnonInterface;
 import edu.purdue.cs307.team16.AWSInterface;
 import edu.purdue.cs307.team16.RadarFilePicker;
 import junit.framework.TestCase;
@@ -42,10 +43,11 @@ public class AWSInterfaceTest extends TestCase {
 		String[] key = {"2010/01/01", "2010/07/14"};
 		String jobID = null; 
 		AWSInterface awsInterface = new AWSInterface(jobID); 
+		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		List<S3ObjectSummary> summaries; 
 		int[] output = new int[2];
 		for(int i = 0 ; i < 2; i++) {
-			summaries = awsInterface.ListBucket(dataBucket, key[i]);
+			summaries = awsAnonInterface.ListBucket(dataBucket, key[i]);
 			output[i] = summaries.size();
 			summaries.clear();
 		}
@@ -90,13 +92,14 @@ public class AWSInterfaceTest extends TestCase {
 		String[] jobID = {"job1", "job2"};
 		//jobID = "job1";
 		String[] bucketName = {"fdafda2", "adfeth2"};
+		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		AWSInterface[] awsInterface = {new AWSInterface(jobID[0], bucketName[0]), new AWSInterface(jobID[1], bucketName[1])};
 		//awsInterface.FindOrCreateWeatherPipeJobBucket();
 		//AWSInterface awsInterface = new AWSInterface(jobID);
 		String[] ret = new String[2];
 		for(int i = 0; i < 2; i++) {
 			awsInterface[i].FindOrCreateWeatherPipeJobDirectory();
-			fileList1.add(RadarFilePicker.getRadarFilesFromTimeRange(startTimes[i], endTimes[i], station, awsInterface[i], dataBucket));
+			fileList1.add(RadarFilePicker.getRadarFilesFromTimeRange(startTimes[i], endTimes[i], station, awsAnonInterface, dataBucket));
 			ret[i] = awsInterface[i].UploadInputFileList(fileList1.get(i), dataBucket);
 		}
 		

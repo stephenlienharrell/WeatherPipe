@@ -25,7 +25,9 @@ public class RadarFilePicker {
 		String uppBound= null;
 		String station= null;
 		String key= null;
+
 		AWSAnonInterface awsAnonInterface = null;
+
 		String dataBucket= null;
 		Object synchronizedHelper;
 
@@ -35,7 +37,9 @@ public class RadarFilePicker {
 			this.uppBound = uppBound;
 			this.station = station;
 			this.key = key;
+
 			this.awsAnonInterface = awsAnonInterface;
+
 			//this.awsInterface = awsInterface;
 			this.dataBucket = dataBucket;
 		}

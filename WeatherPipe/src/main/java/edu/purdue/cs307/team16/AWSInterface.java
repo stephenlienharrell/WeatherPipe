@@ -403,7 +403,7 @@ public class AWSInterface extends MapReduceInterface {
 
             	lastStateMsg = "\rCurrent State of Cluster: " + lastState;
             	System.out.print(lastStateMsg + "                                    ");
-            	
+
             	if(!lastState.startsWith("TERMINATED")) {
             		lastStateMsg = lastStateMsg + " ";
             		for(i = 0; i < 10; i++) {

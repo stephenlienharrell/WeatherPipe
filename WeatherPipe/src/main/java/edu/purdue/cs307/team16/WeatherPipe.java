@@ -28,7 +28,9 @@ public class WeatherPipe {
 	public static String jobID = null;
 	public static AWSInterface awsInterface = null;
 	public static AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
+
 	public static LocalInterface localInterface = null;
+
 	static String jobHadoopJarURL, jobInputURL;
 	public static String instanceType = null; 
 	public static int instanceCount; 
@@ -47,6 +49,7 @@ public class WeatherPipe {
 		
 
 		System.out.println("Searching NEXRAD Files");
+
 		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsAnonInterface, dataBucket);
 
 		RadarFilePicker.executor.shutdown();
