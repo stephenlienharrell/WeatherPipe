@@ -18,6 +18,8 @@ cd WeatherPipe
 gradle build
 cd build/distributions
 tar xfv WeatherPipe.tar
+# Create the analysis you would like (examples already provided)
+vim WeatherPipe/WeatherPipeMapReduce/src/main/java/edu/purdue/cs307/team16/ResearcherMapReduceAnalysis.java
 # Then as an example to run with NEXRAD files between Feb 21, 2010 at 7:30am through Feb 23rd, 2010 at 11:00pm using the KIND radar station.
 WeatherPipe/bin/WeatherPipe -s "21/02/2010 07:30:00" -e "23/02/2010 23:00:00" -st KIND
 
