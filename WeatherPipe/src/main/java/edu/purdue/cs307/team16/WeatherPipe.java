@@ -4,12 +4,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 
+
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.log4j.PropertyConfigurator;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -35,14 +36,8 @@ public class WeatherPipe {
 	public static String station = null;
 	public static WeatherPipeFileWriter fileWriter = new  WeatherPipeFileWriter();
 	
-	
-
 
 	public static void main(String[] args) {
-		String weatherPipeBinaryPath = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-		String log4jConfPath = weatherPipeBinaryPath.substring(0, weatherPipeBinaryPath.lastIndexOf("/")) + "/log4j.properties";
-
-		PropertyConfigurator.configure(log4jConfPath);
 
 		MapReduceBuilder builder = new MapReduceBuilder(null);
 		
@@ -53,6 +48,7 @@ public class WeatherPipe {
 
 		System.out.println("Searching NEXRAD Files");
 		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsAnonInterface, dataBucket);
+
 		RadarFilePicker.executor.shutdown();
 		while (!RadarFilePicker.executor.isTerminated()) {}
 		//System.out.println("Finished all threads");

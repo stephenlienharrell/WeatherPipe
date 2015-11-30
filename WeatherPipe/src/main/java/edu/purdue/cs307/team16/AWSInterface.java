@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.PropertyConfigurator;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -77,6 +78,9 @@ public class AWSInterface extends MapReduceInterface {
 
 	
 	public AWSInterface(String job){
+		String weatherPipeBinaryPath = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String log4jConfPath = weatherPipeBinaryPath.substring(0, weatherPipeBinaryPath.lastIndexOf("/")) + "/log4j.properties";
+		PropertyConfigurator.configure(log4jConfPath);
 		AwsBootstrap(job);
 	}
 	
@@ -326,7 +330,8 @@ public class AWSInterface extends MapReduceInterface {
 		int normalized_hours;
 		double cost;
 		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
-		String line;
+
+		String line, lastStateMsg;
 		int i;
 		
 
@@ -395,8 +400,17 @@ public class AWSInterface extends MapReduceInterface {
             	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
             	Cluster cluster = describeClusterResult.getCluster();
             	lastState = cluster.getStatus().getState();
-            	System.out.print("\rCurrent State of Cluster: " + lastState + "                   ");
+
+            	lastStateMsg = "\rCurrent State of Cluster: " + lastState;
+            	System.out.print(lastStateMsg + "                                    ");
+            	
             	if(!lastState.startsWith("TERMINATED")) {
+            		lastStateMsg = lastStateMsg + " ";
+            		for(i = 0; i < 10; i++) {
+            			lastStateMsg = lastStateMsg + ".";
+            			System.out.print(lastStateMsg);
+            			Thread.sleep(1000);
+            		}
             		continue;
             	} else {	
             		for(i = 0; i < 10; i++) {
