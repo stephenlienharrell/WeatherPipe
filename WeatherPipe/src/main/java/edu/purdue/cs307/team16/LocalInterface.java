@@ -141,29 +141,6 @@ public class LocalInterface extends MapReduceInterface {
 	}
 
 
-	public List<S3ObjectSummary> ListBucket(String bucketName, String key) {
-
-		AWSCredentials creds = new AnonymousAWSCredentials();
-		AmazonS3 s3client = new AmazonS3Client(creds);  
-
-		//System.out.println("bucketname = " + bucketName + "key =" + key);
-
-		ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(bucketName).withPrefix(key);
-		List<S3ObjectSummary> summaries = new ArrayList<S3ObjectSummary>();
-
-		ObjectListing objectListing;
-
-		do {
-			objectListing = s3client.listObjects(listObjectsRequest);
-			for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-				summaries.add(objectSummary);
-			}
-			listObjectsRequest.setMarker(objectListing.getNextMarker());
-		} while (objectListing.isTruncated());
-
-		return summaries;
-	}
-
 
 	// create directory on hdfs dfs 
 	public String FindOrCreateWeatherPipeJobDirectory() {
@@ -357,6 +334,8 @@ public class LocalInterface extends MapReduceInterface {
 		System.out.println("job ended ...");
 		
 	}
+	
+	protected void close() {}
 
 	/*public static void main(String[] args) {
 		LocalInterface l = new LocalInterface();
