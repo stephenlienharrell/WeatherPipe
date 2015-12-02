@@ -17,7 +17,7 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
 	ResearcherMapReduceAnalysis analysis = null;
 	
 	public void reduce(Text keyname, Iterable<Text> str, Context context) throws IOException, InterruptedException {
-		if(analysis == null) analysis = new ResearcherMapReduceAnalysis();
+		if(analysis == null) analysis = new ResearcherMapReduceAnalysis(context.getConfiguration());
     	
     	for(Text val : str) {	
     		if(!(analysis.reduce(val.toString()) == true)) continue;

@@ -46,7 +46,6 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
     
 
     public void map(LongWritable l, Text keyname, Context context) throws IOException, InterruptedException {
-    	
     	if(s3 == null) {
     		ClientConfiguration conf = new ClientConfiguration();
     		// 2 minute timeout
@@ -103,11 +102,10 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
 			ncfile = NetcdfFile.openInMemory(key, byteArrayStream.toByteArray());
 
 				
-		}
-		
-		catch (IOException ioe) {
+		} catch (IOException|IllegalStateException  ioe) {
+			System.out.println("Data file " + key.toString() + "was unable to be loaded.");
 			System.out.println(ExceptionUtils.getStackTrace(ioe));
-			ncfile = null;
+			return;
 		}
 
 		
@@ -126,12 +124,13 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
 					+ "such as not being able to access the network.");
 			System.out.println("Error Message: " + ace.getMessage());
 		}
-		analysis = new ResearcherMapReduceAnalysis();
+		analysis = new ResearcherMapReduceAnalysis(context.getConfiguration());
 		if (!analysis.map(ncfile)) {
-			analysis.serializer.serializeMe = null;
-		} else {
 			ncfile.close();
+			byteArrayStream.close();
+			return;
 		}
+		ncfile.close();
 		byteArrayStream.close();
            
         	
