@@ -25,7 +25,9 @@ public class RadarFilePicker {
 		String uppBound= null;
 		String station= null;
 		String key= null;
-		AWSAnonInterface awsInterface = null;
+
+		AWSAnonInterface awsAnonInterface = null;
+
 		String dataBucket= null;
 		Object synchronizedHelper;
 
@@ -35,7 +37,9 @@ public class RadarFilePicker {
 			this.uppBound = uppBound;
 			this.station = station;
 			this.key = key;
-			this.awsInterface = awsAnonInterface;
+
+			this.awsAnonInterface = awsAnonInterface;
+
 			//this.awsInterface = awsInterface;
 			this.dataBucket = dataBucket;
 		}
@@ -58,7 +62,7 @@ public class RadarFilePicker {
 			arr2 = uppBound.split("_");
 			try {
 
-				List<S3ObjectSummary> summaries = awsInterface.ListBucket(dataBucket, key);
+				List<S3ObjectSummary> summaries = awsAnonInterface.ListBucket(dataBucket, key);
 				for (S3ObjectSummary objectSummary : summaries) {
 
 					index = objectSummary.getKey().indexOf('.');

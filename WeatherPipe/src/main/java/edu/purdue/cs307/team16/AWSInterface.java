@@ -326,6 +326,7 @@ public class AWSInterface extends MapReduceInterface {
 		int normalized_hours;
 		double cost;
 		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
+
 		String line, lastStateMsg;
 		StringBuilder jobOutputBuild;
 		int i;
@@ -398,8 +399,10 @@ public class AWSInterface extends MapReduceInterface {
             	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
             	Cluster cluster = describeClusterResult.getCluster();
             	lastState = cluster.getStatus().getState();
+
             	lastStateMsg = "\rCurrent State of Cluster: " + lastState;
             	System.out.print(lastStateMsg + "                                    ");
+
             	if(!lastState.startsWith("TERMINATED")) {
             		lastStateMsg = lastStateMsg + " ";
             		for(i = 0; i < 10; i++) {
@@ -408,6 +411,11 @@ public class AWSInterface extends MapReduceInterface {
             			Thread.sleep(1000);
             		}
             		continue;
+            	} else {	
+            		for(i = 0; i < 10; i++) {
+            			System.out.print(".");
+            			Thread.sleep(1000);
+            		}
             	}
             	
             	// it reaches here when the emr has "terminated"
@@ -518,7 +526,7 @@ public class AWSInterface extends MapReduceInterface {
 		this.jobBucketName = jobBucketName;
 	}	
 
-	void close() {
+	protected void close() {
 		transMan.shutdownNow();
 	}
 }

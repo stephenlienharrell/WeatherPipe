@@ -317,6 +317,8 @@ public class LocalInterface extends MapReduceInterface {
 		System.out.println("job ended ...");
 		
 	}
+	
+	protected void close() {}
 
 	/*public static void main(String[] args) {
 		LocalInterface l = new LocalInterface();

@@ -15,4 +15,5 @@ public abstract class MapReduceInterface {
 	
 	protected abstract void CreateMRJob(String jobInputLocation, String jobJarLocation, int numInstances, String instanceType);
 	
+	protected abstract void close();
 }
