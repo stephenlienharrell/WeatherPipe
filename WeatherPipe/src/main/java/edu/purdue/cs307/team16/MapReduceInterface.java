@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 public abstract class MapReduceInterface {
 	
+	public String jobOutput;
+	public String jobDirName;
+	
 	protected abstract String FindOrCreateWeatherPipeJobDirectory();
 	
 	protected abstract String UploadInputFileList(ArrayList<String> fileList, String dataDirName);

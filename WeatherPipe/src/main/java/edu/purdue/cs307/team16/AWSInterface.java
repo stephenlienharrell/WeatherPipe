@@ -25,7 +25,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressListener;
@@ -47,9 +46,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.HeadBucketRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
@@ -63,7 +61,6 @@ public class AWSInterface extends MapReduceInterface {
 	private AmazonS3 s3client;
 	private TransferManager transMan;
 	private Region region;
-	public String jobDirName;
 	private String jobSetupDirName;
 	private String jobLogDirName;
 	//private String defaultInstance = "c3.xlarge";
@@ -71,7 +68,6 @@ public class AWSInterface extends MapReduceInterface {
 	private String jobBucketName = null;
 	private String jobID;
 	
-	public String jobOutput;
 	private int bytesTransfered = 0;
 	
 	
@@ -316,7 +312,7 @@ public class AWSInterface extends MapReduceInterface {
 		// Modified from https://mpouttuclarke.wordpress.com/2011/06/24/how-to-run-an-elastic-mapreduce-job-using-the-java-sdk/
 		
 		// first run aws emr create-default-roles
-		
+
 		String hadoopVersion = "2.4.0";
 		String flowName = "WeatherPipe_" + jobID;
 		String logS3Location = "s3n://" + jobBucketName + "/" + jobID + ".log";
@@ -331,7 +327,10 @@ public class AWSInterface extends MapReduceInterface {
 		double cost;
 		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
 		String line, lastStateMsg;
+		StringBuilder jobOutputBuild;
 		int i;
+		Download download;
+		int fileLength;
 		
 
 		BufferedReader lineRead;
@@ -427,31 +426,70 @@ public class AWSInterface extends MapReduceInterface {
         		}
         		System.out.println();
         		
-            	
-            	if(!lastState.endsWith("ERRORS")) {	   		
-            		s3client.getObject(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), rawOutputFile);
+        		
+        		
+            	if(!lastState.endsWith("ERRORS")) {	   
+            		bytesTransfered = 0;
             		
+            		fileLength = (int)s3client.getObjectMetadata(jobBucketName, jobID + "_output" + "/part-r-00000").getContentLength();
+            		GetObjectRequest fileRequest = new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000");
+            		fileRequest.setGeneralProgressListener(new ProgressListener() {
+
+            			@Override
+            			public void progressChanged(ProgressEvent progressEvent) {
+            				bytesTransfered += progressEvent.getBytesTransferred();
+            				
+            			}
+
+            		});
+            		
+            		download = transMan.download(new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000"), rawOutputFile);
+            		
+            		
+            		System.out.println("Downloading Output"); 		
+            		while(!download.isDone()) {
+            			try {
+            				Thread.sleep(1000);
+            			} catch (InterruptedException e) {
+            				continue;
+            			}
+            			
+           // 			System.out.print("\rTransfered: " + bytesTransfered/1024 + "K / " + fileLength/1024 + "K          ");
+            		}
+            	
+           /*  Printing this stuff isn't working	
+            		// If we got an error the count could be off
+            		System.out.print("\rTransfered: " + bytesTransfered/1024 + "K / " + bytesTransfered/1024 + "K           ");
+            		System.out.println();
+           */
+            		System.out.println("Transfer Complete");
+		
             		
             		System.out.println("The job has ended and output has been downloaded to " + jobDirName);
             		System.out.printf("Normalized instance hours: %d\n", normalized_hours);
             		System.out.printf("Approximate cost of this run: $%2.02f\n", cost);
             		System.out.println("The job took " + elapsedTime + " seconds to finish" );
+            		
+            		transMan.shutdownNow();
 
             		lineRead = new BufferedReader(new FileReader(rawOutputFile));
             		
-            		jobOutput = "";
+            		
+            		jobOutputBuild = new StringBuilder("");
             		while((line = lineRead.readLine()) != null) {
-            			if(line.startsWith("Run")) {
-            				jobOutput = "";
-            				jobOutput = line.split("\\t")[1];
+            			if(line.startsWith("Run#")) {
+            				jobOutputBuild = new StringBuilder("");
+            				jobOutputBuild.append(line.split("\t")[1]);
             			} else {
-            				jobOutput = jobOutput + "\n" + line;
+            			    jobOutputBuild.append("\n");
+            			    jobOutputBuild.append(line);
             			}
             			
             		}
+            		jobOutput = jobOutputBuild.toString();
             		break;
-
             	}
+            	
             	System.out.println("The job has ended with errors, please check the log in " + localLogDir);
             	System.out.printf("Normalized instance hours: %d\n", normalized_hours);
             	System.out.printf("Approximate cost of this run = $%2.02f\n", cost);

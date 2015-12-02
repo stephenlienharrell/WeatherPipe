@@ -10,7 +10,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.log4j.PropertyConfigurator;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -37,6 +36,8 @@ public class WeatherPipe {
 	
 
 	public static void main(String[] args) {
+		
+		
 
 		MapReduceBuilder builder = new MapReduceBuilder(null);
 		
@@ -81,7 +82,6 @@ public class WeatherPipe {
 			e.printStackTrace();
 		}
 		
-		awsInterface.close();
 	}
 
 	public static void addFlags(String[] args) {
@@ -147,7 +147,7 @@ public class WeatherPipe {
 			if (line.hasOption("instanceCount")) {
 				instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
 			} else {
-				instanceCount = 1;
+				instanceCount = 2;
 			}
 
 		} catch (ParseException exp) {

@@ -10,32 +10,17 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AnonymousAWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-
 public class LocalInterface extends MapReduceInterface {
 
-	private String jobBucketNamePrefix = "weatherpipe";
-
-	public String jobDirName;
 	private String jobSetupDirName;
 	private String jobLogDirName;
 	public String jobOutputDirName;
@@ -49,7 +34,6 @@ public class LocalInterface extends MapReduceInterface {
 	private String hathiFolder = null;
 	private String jobID;
 
-	public String jobOutput;
 
 	MessageDigest md = null;
 	byte[] shaHash;
@@ -153,8 +137,7 @@ public class LocalInterface extends MapReduceInterface {
 			Process p = Runtime.getRuntime().exec(commands);
 			BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			p.waitFor();
-			String out = null;
-			if((out = in.readLine()) != null) {
+			if((in.readLine()) != null) {
 				//System.out.println("out = " + out);
 				folderExists = true;
 			}
@@ -238,7 +221,7 @@ public class LocalInterface extends MapReduceInterface {
 		// no need to upload to Hathi, is used from local node
 
 		String jarFilename = jobID + "WeatherPipeMapreduce.jar";
-		File jarFile = new File(fileLocation);
+		new File(fileLocation);
 
 		// setup local
 		try {
