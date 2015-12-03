@@ -54,21 +54,27 @@ public class MapReduceBuilder {
 				System.out.println(buildLine);				
 			}
 			
+
+			try {
+				command.waitFor();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.exit(1);
+			}
+			if(command.exitValue() == 1) {
+				System.out.println("Map Reduce Jar Build Failed");
+				BufferedReader stderr = new BufferedReader(new InputStreamReader(command.getErrorStream()));
+				while((buildLine = stderr.readLine()) != null) {
+					System.out.println(buildLine);				
+				}
+				System.out.println();
+				System.exit(1);
+			}
 		} catch (IOException e1) {
 			
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-			System.exit(1);
-		}
-		try {
-			command.waitFor();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.exit(1);
-		}
-		if(command.exitValue() == 1) {
-			System.out.println("Map Reduce Jar Build Failed");
 			System.exit(1);
 		}
 		System.out.println();

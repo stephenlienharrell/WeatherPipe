@@ -2,7 +2,6 @@ package edu.purdue.cs307.team16;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -13,7 +12,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-import edu.purdue.cs307.team16.AWSInterface;
 
 import org.joda.time.Period;
 public class RadarFilePicker {
@@ -27,17 +25,22 @@ public class RadarFilePicker {
 		String uppBound= null;
 		String station= null;
 		String key= null;
-		AWSInterface awsInterface= null;
+
+		AWSAnonInterface awsAnonInterface = null;
+
 		String dataBucket= null;
 		Object synchronizedHelper;
 
 
-		RadarFileAdder(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
+		RadarFileAdder(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSAnonInterface awsAnonInterface, String dataBucket) {
 			this.lowBound = lowBound;
 			this.uppBound = uppBound;
 			this.station = station;
 			this.key = key;
-			this.awsInterface = awsInterface;
+
+			this.awsAnonInterface = awsAnonInterface;
+
+			//this.awsInterface = awsInterface;
 			this.dataBucket = dataBucket;
 		}
 
@@ -59,7 +62,7 @@ public class RadarFilePicker {
 			arr2 = uppBound.split("_");
 			try {
 
-				List<S3ObjectSummary> summaries = awsInterface.ListBucket(dataBucket, key);
+				List<S3ObjectSummary> summaries = awsAnonInterface.ListBucket(dataBucket, key);
 				for (S3ObjectSummary objectSummary : summaries) {
 
 					index = objectSummary.getKey().indexOf('.');
@@ -117,7 +120,7 @@ public class RadarFilePicker {
 	}
 
 
-	public static void addFile(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
+	public static void addFile(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSAnonInterface awsAnonInterface, String dataBucket) {
 		int index = -1;	//used to find the index of '-' in the file name.
 		int compInt1 = 0;	//used to compare the date
 		int compInt2 = 0;	//used to compare the date
@@ -135,7 +138,7 @@ public class RadarFilePicker {
 		arr2 = uppBound.split("_");
 		try {
 
-			List<S3ObjectSummary> summaries = awsInterface.ListBucket(dataBucket, key);
+			List<S3ObjectSummary> summaries = awsAnonInterface.ListBucket(dataBucket, key);
 			for (S3ObjectSummary objectSummary : summaries) {
 
 				index = objectSummary.getKey().indexOf('.');
@@ -183,7 +186,7 @@ public class RadarFilePicker {
 		}
 	}
 
-	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, AWSInterface awsInterface, String dataBucket){
+	public static ArrayList<String> getRadarFilesFromTimeRange(DateTime start, DateTime end, String station, AWSAnonInterface awsAnonInterface, String dataBucket){
 		String lowBound = start.toString("yyyyMMdd_HHmmss");
 		String uppBound = end.toString("yyyyMMdd_HHmmss");
 		ret = new ArrayList<String>();
@@ -202,7 +205,7 @@ public class RadarFilePicker {
 		if(days == 0) {
 			//System.out.println("days = 0");
 			key = lowBound.substring(0, 4) + "/" + lowBound.substring(4, 6) + "/" + lowBound.substring(6, 8);
-			addFile(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
+			addFile(ret, lowBound, uppBound, station, key, awsAnonInterface, dataBucket);
 		}
 		else {
 			//System.out.println("days = " + days);
@@ -224,20 +227,18 @@ public class RadarFilePicker {
 					uppBound = temp.substring(0, 9) + "235959";
 					key = temp.substring(0, 4) + "/" + temp.substring(4, 6) + "/" + temp.substring(6, 8);
 				}
-				addFileThreadHelper(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
+				addFileThreadHelper(ret, lowBound, uppBound, station, key, awsAnonInterface, dataBucket);
 
 			}
 		}
 		return ret;
 
 	}
-
-
-
+	
 	static ExecutorService executor = Executors.newFixedThreadPool(50);
 
-	public static void addFileThreadHelper(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSInterface awsInterface, String dataBucket) {
-		Runnable addFileThread = new RadarFileAdder(ret, lowBound, uppBound, station, key, awsInterface, dataBucket);
+	public static void addFileThreadHelper(ArrayList<String> ret, String lowBound, String uppBound, String station, String key, AWSAnonInterface awsAnonInterface, String dataBucket) {
+		Runnable addFileThread = new RadarFileAdder(ret, lowBound, uppBound, station, key, awsAnonInterface, dataBucket);
 		executor.execute(addFileThread);
 	}
 

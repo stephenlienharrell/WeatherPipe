@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 
+
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.CommandLine;
@@ -16,7 +17,6 @@ import org.joda.time.format.DateTimeFormatter;
 import edu.purdue.cs307.team16.RadarFilePicker;
 
 public class WeatherPipe {
-	// final String dataBucket = "noaa-nexrad-level2";
 	final static String dateFormatString = "dd/MM/yyyy HH:mm:ss";
 	final static String dateDesc = "Date Format is " + dateFormatString;
 	final static DateTimeFormatter dateFormat = DateTimeFormat.forPattern(dateFormatString);
@@ -25,26 +25,34 @@ public class WeatherPipe {
 	public static DateTime endTime = null;
 	static ArrayList<String> radarFileNames;
 	public static String jobID = null;
-	static AWSInterface awsInterface = null;
+	public static AWSInterface awsInterface = null;
+	public static AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
+
+	public static LocalInterface localInterface = null;
+
 	static String jobHadoopJarURL, jobInputURL;
 	public static String instanceType = null; 
 	public static int instanceCount; 
 	public static String bucketName = null;
 	public static String station = null;
 	public static WeatherPipeFileWriter fileWriter = new  WeatherPipeFileWriter();
+	
 
 	public static void main(String[] args) {
+		
+		
 
 		MapReduceBuilder builder = new MapReduceBuilder(null);
 		
-		addFlags(args);		
+		MapReduceInterface mrInterface = addFlags(args);		
 
 		String mapReduceJarLocation = builder.buildMapReduceJar();
 		
 
 		System.out.println("Searching NEXRAD Files");
-		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsInterface,
-				dataBucket);
+
+		radarFileNames = RadarFilePicker.getRadarFilesFromTimeRange(startTime, endTime, station, awsAnonInterface, dataBucket);
+
 		RadarFilePicker.executor.shutdown();
 		while (!RadarFilePicker.executor.isTerminated()) {}
 		//System.out.println("Finished all threads");
@@ -54,7 +62,7 @@ public class WeatherPipe {
 				+ " and " + endTime.toString());
 		System.out.println();
 		System.out.println("Search for/Create WeatherPipe S3 bucket");
-		bucketName = awsInterface.FindOrCreateWeatherPipeJobDirectory();
+		bucketName = mrInterface.FindOrCreateWeatherPipeJobDirectory();
 		if (bucketName == null) {
 			System.out.println("Bucket was not created correctly");
 			System.exit(1);
@@ -62,17 +70,19 @@ public class WeatherPipe {
 		System.out.println("Using bucket " + bucketName);
 
 		System.out.print("Uploading Input file... ");
-		jobInputURL = awsInterface.UploadInputFileList(radarFileNames, dataBucket);
-		System.out.println("Complete");
+		jobInputURL = mrInterface.UploadInputFileList(radarFileNames, dataBucket);
 
 		System.out.print("Uploading Jar file... ");
-		jobHadoopJarURL = awsInterface.UploadMPJarFile(mapReduceJarLocation);
-		System.out.println("Complete");
+		jobHadoopJarURL = mrInterface.UploadMPJarFile(mapReduceJarLocation);
 
-		awsInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
+		mrInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
 		try {
-			fileWriter.writeOutput(awsInterface.jobOutput, awsInterface.jobDirName, mapReduceJarLocation);
+			System.out.println("Writing JSON output...");
+			fileWriter.writeOutput(mrInterface.jobOutput, mrInterface.jobDirName, mapReduceJarLocation);
+
+			System.out.println("Find JSON output file in: " + 	mrInterface.jobDirName + "/jsonOutputFile");
+
 		} catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException
 				| InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
@@ -80,10 +90,11 @@ public class WeatherPipe {
 			e.printStackTrace();
 		}
 		
-		awsInterface.close();
+		mrInterface.close();
+
 	}
 
-	public static void addFlags(String[] args) {
+	public static MapReduceInterface addFlags(String[] args) {
 		// create Options object
 		Options options = new Options();
 		CommandLineParser parser = new DefaultParser();
@@ -100,6 +111,7 @@ public class WeatherPipe {
 		options.addOption("i_T", "instanceType", true,
 				"instanceType of analysis. The instanceType looks like \"c3.xlarge\". ");
 		options.addOption("i_C", "instanceCount", true, "instanceCount of analysis. ");
+		options.addOption("hathi", "LocalInterface", false, "add this if you want to use a local Hadoop cluster");
 
 		try {
 			// parse the command line arguments
@@ -129,16 +141,7 @@ public class WeatherPipe {
 			if (line.hasOption("jobID")) {
 				jobID = line.getOptionValue("jobID");
 			}
-
-			if (line.hasOption("bucket_name")) {
-				bucketName = line.getOptionValue("bucket_name");
-				awsInterface = new AWSInterface(jobID, bucketName);
-
-			} else {
-				awsInterface = new AWSInterface(jobID);
-
-			}
-
+			
 			if (line.hasOption("instanceType")) {
 				instanceType = line.getOptionValue("instanceType");
 			}
@@ -146,13 +149,30 @@ public class WeatherPipe {
 			if (line.hasOption("instanceCount")) {
 				instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
 			} else {
-				instanceCount = 1;
+				instanceCount = 2;
+			}
+			
+			if(line.hasOption("hathi")) {
+				System.out.println("Using Hathi");
+				localInterface = new LocalInterface();
+				return localInterface;
+			}
+			else if (line.hasOption("bucket_name")) {
+				bucketName = line.getOptionValue("bucket_name");
+				awsInterface = new AWSInterface(jobID, bucketName);
+				return awsInterface;
+
+			} 
+			else {
+				awsInterface = new AWSInterface(jobID);
+				return  awsInterface;
 			}
 
 		} catch (ParseException exp) {
 			System.out.println("Unexpected exception:" + exp.getMessage());
 			System.exit(1);
 		}
+		return null;
 
 	}
 }
