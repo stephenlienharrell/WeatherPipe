@@ -17,11 +17,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
-<<<<<<< HEAD
+
 import java.lang.System;
 import java.lang.Runtime;
-=======
->>>>>>> 105f0d42d984638c9fc3eb35dcf486d7ab45f777
+
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.PropertyConfigurator;
@@ -400,7 +399,7 @@ public class AWSInterface extends MapReduceInterface {
             final String resultId = result.getJobFlowId();
             
         	
-            System.out.println(resultId + "---1");
+           
             //Check the status of the running job
             String lastState = "";
            Runtime.getRuntime().addShutdownHook(new Thread() {public void run()
