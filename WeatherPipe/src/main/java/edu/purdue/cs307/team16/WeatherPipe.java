@@ -78,7 +78,11 @@ public class WeatherPipe {
 		mrInterface.CreateMRJob(jobInputURL, jobHadoopJarURL, instanceCount, instanceType);
 
 		try {
+			System.out.println("Writing JSON output...");
 			fileWriter.writeOutput(mrInterface.jobOutput, mrInterface.jobDirName, mapReduceJarLocation);
+
+			System.out.println("Find JSON output file in: " + 	mrInterface.jobDirName + "/jsonOutputFile");
+
 		} catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | SecurityException
 				| InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {

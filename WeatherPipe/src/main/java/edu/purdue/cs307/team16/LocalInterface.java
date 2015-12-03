@@ -1,6 +1,6 @@
 package edu.purdue.cs307.team16;
 
-
+import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -53,7 +53,7 @@ public class LocalInterface extends MapReduceInterface {
 			while((user = in.readLine()) != null) {
 				break;
 			}
-			//System.out.println("user = "  + user);
+	
 			in.close();
 
 			String [] commands2 = {"bash", "-c", "echo $RCAC_SCRATCH" };
@@ -63,34 +63,18 @@ public class LocalInterface extends MapReduceInterface {
 			while((rcacScratch = in2.readLine()) != null) {
 				break;
 			}
-			//System.out.println("rcacScratch = "  + rcacScratch );
+			
 			in2.close();
-			//md = MessageDigest.getInstance("SHA-256");
-			//md.update(user.getBytes("UTF-8"));
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} 
 
-		/*
-			shaHash = md.digest();
-			hexSha = new StringBuffer();
-			for(byte b : shaHash) {
-				hexSha.append(String.format("%02X", b));
-			}
-
-			hathiFolder = jobBucketNamePrefix + "." + hexSha;
-			if(hathiFolder.length() > 63) {
-				hathiFolder = hathiFolder.substring(0, 62);
-			}
-
-			hathiFolder = hathiFolder.toLowerCase();
-		 */
 
 		hathiFolder = "WeatherPipeRuns";
-		//System.out.println("hathiFolder name = " + hathiFolder);
-
+		
 		// generate jobID
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
 		df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -147,7 +131,6 @@ public class LocalInterface extends MapReduceInterface {
 			e.printStackTrace();
 		}
 
-		//System.out.println("folderExists = " + folderExists);
 
 		if(!folderExists) {
 			// create hathiFolder
@@ -230,28 +213,6 @@ public class LocalInterface extends MapReduceInterface {
 			System.err.print("Fileutils copying jar to local dir failed");
 			e.printStackTrace();
 		}
-
-
-		// setup hathi // not needed
-		/*
-		String [] commands = {"bash", "-c", "hdfs dfs -copyFromLocal " + 
-				jobSetupDirName + "/" + jarFilename + " " + "$RCAC_SCRATCH/" + hathiFolder + "/"};
-
-		Process p;
-		try {
-			p = Runtime.getRuntime().exec(commands);
-			InputStream error = p.getErrorStream();
-			p.waitFor();
-			if(error.available() != 0) {
-				System.err.print("Upload jar failed");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		 */
-
 		return jobSetupDirName + "/" + jarFilename;
 	}
 
@@ -260,7 +221,6 @@ public class LocalInterface extends MapReduceInterface {
 		String outputFilename = jobID + "_output";
 
 		jobOutput = hathiFolder + "/" + outputFilename;
-		System.out.println("jobOutput = " + jobOutput);
 		
 		//System.out.println("running: " +  "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput);
 		String [] commands = {"bash", "-c", "hadoop jar " + jobJarLocation + " " + jobInputLocation + " " + jobOutput};
@@ -296,42 +256,60 @@ public class LocalInterface extends MapReduceInterface {
 		// copy files back into local directory
 		String [] commands2 = {"bash", "-c", "hdfs dfs -copyToLocal " + 
 				jobOutput + "/* " + jobOutputDirName + "/"};
-		//System.out.println("commands2 =" + Arrays.toString(commands2));
+
 		System.out.println("Downloading output files");
 		
 		ProcessBuilder pb2 = new ProcessBuilder(commands2);
-		pb.redirectErrorStream(true);
+		pb2.redirectErrorStream(true);
 		Process proc2 = null;
 		try {
 			proc2 = pb2.start();
 			proc2.waitFor();
 			proc2.destroy();
 			
-			jobOutput = jobOutputDirName;
-			System.out.println("jobOutput = " + jobOutput);
-			
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		} 
+
+		String rawOutputFile = jobOutputDirName + "/part-r-00000";
+
+		line = "";
+		System.out.println("file download completed");
+		BufferedReader lineRead = null;
+		try {
+			lineRead = new BufferedReader(new FileReader(rawOutputFile));
+		}
+		catch (FileNotFoundException f) {
+			System.out.println("rawOutputFile not found");
+			f.printStackTrace();
+		}
 		
+		StringBuilder jobOutputBuild = new StringBuilder("");
+
+		try {
+			while((line = lineRead.readLine()) != null) {
+				if(line.startsWith("Run#")) {
+					jobOutputBuild = new StringBuilder("");
+					jobOutputBuild.append(line.split("\t")[1]);
+				} else {
+				    jobOutputBuild.append("\n");
+				    jobOutputBuild.append(line);
+				}
+				
+			}
+		}
+		catch(IOException e) {
+			System.out.println("Could not read line from file");
+			e.printStackTrace();
+		}
+
+        jobOutput = jobOutputBuild.toString();
+
+
 		System.out.println("job ended ...");
 		
 	}
 	
 	protected void close() {}
 
-	/*public static void main(String[] args) {
-		LocalInterface l = new LocalInterface();
-		System.out.println("hathiFolder = " + l.FindOrCreateWeatherPipeJobDirectory());
-		ArrayList<String> fileList = new ArrayList<String>();
-		fileList.add("2010/01/01/KAKQ/KAKQ20100101_073619_V03.gz");
-		fileList.add("2010/01/01/KAKQ/KAKQ20100101_074559_V03.gz");
-		fileList.add("2010/01/01/KAKQ/KAKQ20100101_075539_V03.gz");
-
-		String dataDirName = "noaa-nexrad-level2";
-
-		System.out.println("inputFileDirectory = " + l.UploadInputFileList(fileList, dataDirName));
-
-		System.out.println("jarFileDirectory = " + l.UploadMPJarFile("hello"));
-	}*/
 }
