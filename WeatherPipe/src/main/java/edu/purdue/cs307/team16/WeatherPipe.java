@@ -1,9 +1,9 @@
 package edu.purdue.cs307.team16;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -38,7 +38,7 @@ public class WeatherPipe {
 	public static WeatherPipeFileWriter fileWriter = new  WeatherPipeFileWriter();
 	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
 		
 
@@ -60,6 +60,13 @@ public class WeatherPipe {
 		
 		System.out.println("Found " + radarFileNames.size() + " NEXRAD Radar files between " + startTime.toString()
 				+ " and " + endTime.toString());
+		
+		//exit if the station's name cannot find
+		if (radarFileNames.size() == 0) {
+			System.out.println("There's no NEXRAD File found, please check the name of the station");
+			System.exit(1);
+		}
+		
 		System.out.println();
 		System.out.println("Search for/Create WeatherPipe S3 bucket");
 		bucketName = mrInterface.FindOrCreateWeatherPipeJobDirectory();
@@ -90,8 +97,12 @@ public class WeatherPipe {
 
 	}
 
-	public static MapReduceInterface addFlags(String[] args) {
+	public static MapReduceInterface addFlags(String[] args) throws IOException {
 		// create Options object
+		
+		INIEditor i = new INIEditor();
+		i.read("WeatherPipe.ini");
+		
 		Options options = new Options();
 		CommandLineParser parser = new DefaultParser();
 
@@ -115,6 +126,9 @@ public class WeatherPipe {
 
 			if (line.hasOption("start_time") && (line.getOptionValue("start_time") != null)) {
 				startTime = DateTime.parse(line.getOptionValue("start_time"), dateFormat);
+				i.setValue("startTime", line.getOptionValue("start_time"));
+			} else if (i.hasKey("startTime") && !i.getValue("startTime").equals("")) {
+				startTime = DateTime.parse(i.getValue("startTime"), dateFormat);
 			} else {
 				System.out.println("Flag start_time is required");
 				System.exit(1);
@@ -122,6 +136,9 @@ public class WeatherPipe {
 
 			if (line.hasOption("end_time")) {
 				endTime = DateTime.parse(line.getOptionValue("end_time"), dateFormat);
+				i.setValue("endTime", line.getOptionValue("end_time"));
+			} else if (i.hasKey("endTime") && !i.getValue("endTime").equals("")) {
+				endTime = DateTime.parse(i.getValue("endTime"), dateFormat);
 			} else {
 				System.out.println("Flag end_time is required");
 				System.exit(1);
@@ -129,6 +146,9 @@ public class WeatherPipe {
 
 			if (line.hasOption("station") && RadarFilePicker.checkStationType(line.getOptionValue("station"))) {
 				station = line.getOptionValue("station");
+				i.setValue("station", station);
+			} else if (i.hasKey("station") && RadarFilePicker.checkStationType(i.getValue("station"))) {
+				station = i.getValue("station");
 			} else {
 				System.out.println("Flag station is required");
 				System.exit(1);
@@ -136,14 +156,23 @@ public class WeatherPipe {
 
 			if (line.hasOption("jobID")) {
 				jobID = line.getOptionValue("jobID");
+				i.setValue("jobID", jobID);
+			} else if (i.hasKey("jobID") && !i.getValue("jobID").equals("")){
+				jobID = i.getValue("jobID");
 			}
 			
 			if (line.hasOption("instanceType")) {
 				instanceType = line.getOptionValue("instanceType");
+				i.setValue("instanceType", instanceType);
+			} else if (i.hasKey("instanceType") && !i.getValue("instanceType").equals("")){
+				instanceType = i.getValue("instanceType");
 			}
 
 			if (line.hasOption("instanceCount")) {
 				instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
+				i.setValue("instanceCount", Integer.toString(instanceCount));
+			} else if (i.hasKey("instanceCount") && !i.getValue("instanceCount").equals("")){
+				instanceCount = Integer.parseInt(i.getValue("instanceCount"));
 			} else {
 				instanceCount = 1;
 			}
@@ -155,6 +184,7 @@ public class WeatherPipe {
 			}
 			else if (line.hasOption("bucket_name")) {
 				bucketName = line.getOptionValue("bucket_name");
+				i.setValue("bucketName", bucketName);
 				awsInterface = new AWSInterface(jobID, bucketName);
 				return awsInterface;
 
@@ -166,6 +196,9 @@ public class WeatherPipe {
 
 		} catch (ParseException exp) {
 			System.out.println("Unexpected exception:" + exp.getMessage());
+			System.exit(1);
+		} catch (IllegalArgumentException e){
+			System.out.println("Illegal Arguments with invalid format: " + e.getMessage());
 			System.exit(1);
 		}
 		return null;

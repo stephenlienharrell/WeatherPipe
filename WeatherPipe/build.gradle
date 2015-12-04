@@ -9,13 +9,16 @@ repositories {
     mavenCentral()
 }
 
+sourceCompatibility = 1.7 
+targetCompatibility = 1.7 
+
 dependencies {
 
    compile 'commons-cli:commons-cli:1.3'
    compile 'com.amazonaws:aws-java-sdk:1.10.30'
    compile 'joda-time:joda-time:2.8.2'
    compile 'commons-io:commons-io:2.4'
-   compile 'org.json:json:20150729'
+   compile 'org.json:json:20140107'
    compile 'junit:junit:4.12'
    compile 'log4j:log4j:1.2.17'
 
@@ -23,7 +26,7 @@ dependencies {
    testCompile 'com.amazonaws:aws-java-sdk:1.10.30'
    testCompile 'joda-time:joda-time:2.8.2'
    testCompile 'commons-io:commons-io:2.4'
-   testCompile 'org.json:json:20150729'
+   testCompile 'org.json:json:20140107'
    testCompile 'junit:junit:4.12'
    
 

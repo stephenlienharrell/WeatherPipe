@@ -18,6 +18,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import java.lang.System;
+import java.lang.Runtime;
+
+
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -40,6 +44,7 @@ import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowResult;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.elasticmapreduce.model.TerminateJobFlowsRequest;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -326,6 +331,7 @@ public class AWSInterface extends MapReduceInterface {
 		int normalized_hours;
 		double cost;
 		long startTimeOfProgram, endTimeOfProgram, elapsedTime;
+		final String resultId;
 
 		String line, lastStateMsg;
 		StringBuilder jobOutputBuild;
@@ -391,10 +397,20 @@ public class AWSInterface extends MapReduceInterface {
      
             describeClusterRequest.setClusterId(result.getJobFlowId());
             
-
-            
+            resultId = result.getJobFlowId();
+           
             //Check the status of the running job
             String lastState = "";
+           Runtime.getRuntime().addShutdownHook(new Thread() {public void run()
+            	{	List<String> jobIds = new ArrayList<String>();
+            		jobIds.add(resultId);
+        	   		TerminateJobFlowsRequest tjfr = new TerminateJobFlowsRequest(jobIds);
+        	   		emrClient.terminateJobFlows(tjfr);
+        	   		System.out.println();
+        	   		System.out.println("Amazon EMR job shutdown");
+            	}});
+           
+           
             while (true)
             {
             	describeClusterResult = emrClient.describeCluster(describeClusterRequest);
