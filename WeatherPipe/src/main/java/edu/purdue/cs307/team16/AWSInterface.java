@@ -332,6 +332,7 @@ public class AWSInterface extends MapReduceInterface {
 		int i;
 		Download download;
 		int fileLength;
+        Boolean failed = false;
 		
 
 		BufferedReader lineRead;
@@ -355,7 +356,7 @@ public class AWSInterface extends MapReduceInterface {
             System.out.println("Using instance count: " + numInstances);
             instances.setInstanceCount(numInstances);
             System.out.println("Using master instance type: " + instanceType);
-            instances.setMasterInstanceType(instanceType);
+            instances.setMasterInstanceType("c3.xlarge");
             
             // do these need to be different??
             System.out.println("Using slave instance type: " + instanceType);
@@ -390,7 +391,7 @@ public class AWSInterface extends MapReduceInterface {
      
             describeClusterRequest.setClusterId(result.getJobFlowId());
             
-            
+
             
             //Check the status of the running job
             String lastState = "";
@@ -412,10 +413,8 @@ public class AWSInterface extends MapReduceInterface {
             		}
             		continue;
             	} else {	
-            		for(i = 0; i < 10; i++) {
-            			System.out.print(".");
-            			Thread.sleep(1000);
-            		}
+            		lastStateMsg = lastStateMsg + " ";
+            		System.out.print(lastStateMsg);
             	}
             	
             	// it reaches here when the emr has "terminated"
@@ -438,7 +437,7 @@ public class AWSInterface extends MapReduceInterface {
         		
             	if(!lastState.endsWith("ERRORS")) {	   
             		bytesTransfered = 0;
-            		
+            		failed = true;
             		fileLength = (int)s3client.getObjectMetadata(jobBucketName, jobID + "_output" + "/part-r-00000").getContentLength();
             		GetObjectRequest fileRequest = new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000");
             		fileRequest.setGeneralProgressListener(new ProgressListener() {
@@ -480,7 +479,10 @@ public class AWSInterface extends MapReduceInterface {
             		
             		lineRead = new BufferedReader(new FileReader(rawOutputFile));
             		
-            		
+            		if(failed) {
+            			jobOutput = "FAILED";
+            			break;
+            		}
             		jobOutputBuild = new StringBuilder("");
             		while((line = lineRead.readLine()) != null) {
             			if(line.startsWith("Run#")) {

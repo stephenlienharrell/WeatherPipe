@@ -14,6 +14,9 @@ import java.lang.reflect.Method;
 public class WeatherPipeFileWriter {
  
     void writeOutput(String jobOutput, String outputDir, String mapReduceJarFileLocation) throws MalformedURLException, ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    	
+    	if(jobOutput.startsWith("FAIL")) return;
+    	
         // UGLY DYNAMIC LOADING OF MAPREDUCE JAR TO GET DATA TYPES
         // OH GOD, IT BUUUUUURNS
         URLClassLoader child = new URLClassLoader (new URL[] {new URL("file://" + mapReduceJarFileLocation)}, 
