@@ -23,7 +23,7 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
     		if(!(analysis.reduce(val.toString()) == true)) continue;
     		passNum++;
     	}
-    	System.out.println("Final array: " + Arrays.toString((double[])analysis.serializer.serializeMe));
+//    	System.out.println("Final array: " + Arrays.toString((double[])analysis.serializer.serializeMe));
     	
        	byte[] databyte = SerializationUtils.serialize(analysis.serializer);      	
        	String byte_to_string = Base64.encodeBase64String(databyte);

@@ -28,8 +28,6 @@ public class WeatherPipeMapReduce {
         job.setNumReduceTasks(1);
         job.setMapperClass(Map.class);
         job.setReducerClass(Reduce.class);
-        job.setSpeculativeExecution(false);
-        job.setReduceSpeculativeExecution(false);
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         

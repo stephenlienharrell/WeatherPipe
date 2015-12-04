@@ -1,15 +1,17 @@
 package edu.purdue.cs307.team16;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
-import org.json.JSONObject;
+import org.apache.log4j.PropertyConfigurator;
 
 import ucar.ma2.Array;
-
+import ucar.ma2.Index;
+import ucar.ma2.InvalidRangeException;
+import ucar.nc2.FileWriter2;
 import ucar.nc2.NetcdfFile;
+import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
 
@@ -29,18 +31,24 @@ public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<double[], dou
 		double[] retArray = null;
 		byte[] bytes;
 		
-		// SHAPE is [3, 360, 1324]
+		// SHAPE is scanR=7, radialR=360, gateR=1336
+
 
 
 		Variable reflectivity = nexradNetCDF.findVariable("Reflectivity");
 		if(reflectivity == null) return null;
+		System.out.println("reflectivity shape - " + Arrays.toString(reflectivity.getShape()));
+		Variable reflectivityHi = nexradNetCDF.findVariable("Reflectivity_HI");
+		if(reflectivityHi == null) return null;
+		System.out.println("reflectivityHi shape - " + Arrays.toString(reflectivityHi.getShape()));
+		
 		try {
 			dataArray = reflectivity.read();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
-		if(dataArray.getShape()[0] != 3) return null;
+		if(dataArray.getShape()[0] != 7 || dataArray.getShape()[2] != 1336) return null;
 		
 		bytes = (byte[]) dataArray.copyTo1DJavaArray();
 		
@@ -66,34 +74,105 @@ public class ResearcherMapReduceAnalysis extends MapReduceAnalysis<double[], dou
 		numberOfDataPoints++;
 
 		for(int i = 0; i < input.length; i++) {
-			if(input != null) runningSumsArray[i] += input[i];
+			runningSumsArray[i] += input[i];
 			averageArray[i] = runningSumsArray[i]/numberOfDataPoints;
 		}
-
+		System.gc();
 		return averageArray;
 	}
 
 
 	protected void outputFileWriter(double[] reduceOutput, String outputDir) {
-		String outputFile = outputDir + "/jsonOutputFile";
-		JSONObject jsonObj = new JSONObject();
-		FileWriter fileWriter;
+		int i;
 		
-		jsonObj.put("Average Array", Arrays.toString(reduceOutput));
-		
+		// Instead of creating everything from scratch, load a netcdf file from 
+		// the dataset we averaged that has the same shape and modify that.
+		// file is available from: http://noaa-nexrad-level2.s3.amazonaws.com/2015/11/01/KIND/KIND20151101_000411_V06.gz
+		String cheatFile = "KIND20151101_000411_V06";
+		NetcdfFile ncfileIn = null; 
 		try {
-			fileWriter = new FileWriter(outputFile);
-			fileWriter.write(jsonObj.toString() + "\n");
-			fileWriter.flush();
-			fileWriter.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+			ncfileIn = NetcdfFile.open(cheatFile);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		
-	}
+		NetcdfFileWriter.Version version = NetcdfFileWriter.Version.netcdf3;
+		String filenameOut = outputDir + "/netcdfOut";
+		try {
+			FileWriter2 writer2 = new ucar.nc2.FileWriter2(ncfileIn, filenameOut, version, null);
+			NetcdfFile ncfileOut;
 
+			ncfileOut = writer2.write();
+
+			ncfileIn.close();
+			ncfileOut.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		// SHAPE is scanR=7, radialR=360, gateR=1336
+
+		NetcdfFileWriter writer = null;
+		
+		try {
+			writer = NetcdfFileWriter.openExisting(filenameOut);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		Variable reflectivity = writer.findVariable("Reflectivity");
+		int[] shape = reflectivity.getShape();
+		
+		try {
+			writer.setRedefineMode(true);
+			writer.deleteVariableAttribute(reflectivity,  "reflectivity");
+			writer.deleteVariableAttribute(reflectivity,  "reflectivity_HI");
+			writer.setRedefineMode(false);
+
+			writer.close();
+			writer = NetcdfFileWriter.openExisting(filenameOut);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
+		
+		byte[] byteOutput = new byte[reduceOutput.length];
+		for(i=0; i<reduceOutput.length; i++) {
+			byteOutput[i] = (byte)reduceOutput[i];
+		}
+
+		Array newReflectArray = Array.factory(byte.class, shape, byteOutput);
+		try {
+
+
+			writer.write(reflectivity, new int[3], newReflectArray);
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidRangeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+		
+	}
+	
+
+	public static void main(String... aArgs){
+		ResearcherMapReduceAnalysis thing = new ResearcherMapReduceAnalysis();
+		thing.outputFileWriter(new double[7*360*1336], "x");
+	}
+	
 }
+
+
+
 
 /* 
  // Example of array average
