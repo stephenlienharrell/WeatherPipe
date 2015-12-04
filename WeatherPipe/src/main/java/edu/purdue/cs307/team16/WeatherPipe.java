@@ -145,7 +145,7 @@ public class WeatherPipe {
 			if (line.hasOption("instanceCount")) {
 				instanceCount = Integer.parseInt(line.getOptionValue("instanceCount"));
 			} else {
-				instanceCount = 2;
+				instanceCount = 1;
 			}
 			
 			if(line.hasOption("hathi")) {
