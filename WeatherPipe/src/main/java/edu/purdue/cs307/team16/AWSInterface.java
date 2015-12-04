@@ -478,8 +478,6 @@ public class AWSInterface extends MapReduceInterface {
             		System.out.printf("Approximate cost of this run: $%2.02f\n", cost);
             		System.out.println("The job took " + elapsedTime + " seconds to finish" );
             		
-            		transMan.shutdownNow();
-
             		lineRead = new BufferedReader(new FileReader(rawOutputFile));
             		
             		
