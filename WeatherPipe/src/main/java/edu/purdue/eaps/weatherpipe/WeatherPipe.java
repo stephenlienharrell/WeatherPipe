@@ -1,4 +1,4 @@
-package edu.purdue.cs307.team16;
+package edu.purdue.eaps.weatherpipe;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +14,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import edu.purdue.cs307.team16.RadarFilePicker;
 
 public class WeatherPipe {
 	final static String dateFormatString = "dd/MM/yyyy HH:mm:ss";

@@ -1,4 +1,4 @@
-package edu.purdue.cs307.team16.test;
+package edu.purdue.eaps.weatherpipe.test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -24,6 +24,11 @@ import org.junit.Test;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+
+import edu.purdue.eaps.weatherpipe.AWSAnonInterface;
+import edu.purdue.eaps.weatherpipe.AWSInterface;
+import edu.purdue.eaps.weatherpipe.RadarFilePicker;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
@@ -31,9 +36,6 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 
-import edu.purdue.cs307.team16.AWSAnonInterface;
-import edu.purdue.cs307.team16.AWSInterface;
-import edu.purdue.cs307.team16.RadarFilePicker;
 import junit.framework.TestCase;
 
 public class AWSInterfaceTest extends TestCase {

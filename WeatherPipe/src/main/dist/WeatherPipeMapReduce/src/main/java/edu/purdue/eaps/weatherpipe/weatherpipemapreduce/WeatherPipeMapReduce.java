@@ -1,4 +1,4 @@
-package edu.purdue.cs307.team16;
+package edu.purdue.eaps.weatherpipe.weatherpipemapreduce;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.*;

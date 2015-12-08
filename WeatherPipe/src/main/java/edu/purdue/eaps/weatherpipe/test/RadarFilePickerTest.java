@@ -1,4 +1,4 @@
-package edu.purdue.cs307.team16.test;
+package edu.purdue.eaps.weatherpipe.test;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import edu.purdue.cs307.team16.AWSAnonInterface;
-import edu.purdue.cs307.team16.AWSInterface;
-import edu.purdue.cs307.team16.RadarFilePicker;
+import edu.purdue.eaps.weatherpipe.AWSAnonInterface;
+import edu.purdue.eaps.weatherpipe.AWSInterface;
+import edu.purdue.eaps.weatherpipe.RadarFilePicker;
 import junit.framework.TestCase;
 
 public class RadarFilePickerTest extends TestCase {

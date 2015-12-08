@@ -1,4 +1,4 @@
-package edu.purdue.cs307.team16;
+package edu.purdue.eaps.weatherpipe;
  
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,7 +22,7 @@ public class WeatherPipeFileWriter {
         URLClassLoader child = new URLClassLoader (new URL[] {new URL("file://" + mapReduceJarFileLocation)}, 
                 Main.class.getClassLoader());
         @SuppressWarnings("rawtypes")
-        Class classToLoad = Class.forName("edu.purdue.cs307.team16.ResearcherMapReduceAnalysis", true, child);
+        Class classToLoad = Class.forName("edu.purdue.eaps.weatherpipe.weatherpipemapreduce.ResearcherMapReduceAnalysis", true, child);
         @SuppressWarnings("unchecked")
         Method method = classToLoad.getMethod ("writeFile",
         		new Class<?>[] {String.class, String.class});

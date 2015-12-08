@@ -33,7 +33,7 @@ jar {
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 
     manifest {
-        attributes 'Main-Class': "edu.purdue.cs307.team16.WeatherPipeMapReduce"
+        attributes 'Main-Class': "edu.purdue.eaps.weatherpipe.weatherpipemapreduce.WeatherPipeMapReduce"
     }
 }
 apply plugin: 'eclipse'
