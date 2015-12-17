@@ -44,7 +44,7 @@ public class AWSInterfaceTest extends TestCase {
 		final String dataBucket = "noaa-nexrad-level2";
 		String[] key = {"2010/01/01", "2010/07/14"};
 		String jobID = null; 
-		AWSInterface awsInterface = new AWSInterface(jobID); 
+		AWSInterface awsInterface = new AWSInterface(jobID, null); 
 		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		List<S3ObjectSummary> summaries; 
 		int[] output = new int[2];
@@ -62,7 +62,7 @@ public class AWSInterfaceTest extends TestCase {
 	public void testFindOrCreateWeatherPipeJobBucket() {
 		String jobID = null; 
 		String bucketName = "fdgfhfdx2";
-		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSInterface awsInterface = new AWSInterface(jobID, null);
 		jobID = "job1";
 		awsInterface = new AWSInterface(jobID, bucketName);
 		String output;
@@ -123,7 +123,7 @@ public class AWSInterfaceTest extends TestCase {
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH.mm");
 		String isoDate = df.format(new Date());
 		String jobID = isoDate + "." + Calendar.getInstance().get(Calendar.MILLISECOND);
-		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSInterface awsInterface = new AWSInterface(jobID, null);
 		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
 		String userID = new AmazonIdentityManagementClient(credentials).getUser().getUser().getUserId();
 		try {

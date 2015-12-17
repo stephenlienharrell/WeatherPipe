@@ -16,6 +16,7 @@ public class WeatherPipeFileWriter {
     void writeOutput(String jobOutput, String outputDir, String mapReduceJarFileLocation) throws MalformedURLException, ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
     	
     	if(jobOutput.startsWith("FAIL")) return;
+    	
     	if(jobOutput.equals("")) {
     		System.out.println("Error: No data found in MapReduce Output");
     	}

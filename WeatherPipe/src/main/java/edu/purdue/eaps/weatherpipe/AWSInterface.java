@@ -70,7 +70,7 @@ public class AWSInterface extends MapReduceInterface {
 	private String jobLogDirName;
 	//private String defaultInstance = "c3.xlarge";
 
-	private String jobBucketName = null;
+	private String jobBucketName;
 	private String jobID;
 	
 	private int bytesTransfered = 0;
@@ -78,17 +78,14 @@ public class AWSInterface extends MapReduceInterface {
 	
 
 	
-	public AWSInterface(String job){
+	public AWSInterface(String job, String bucket){
 		String weatherPipeBinaryPath = WeatherPipe.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		String log4jConfPath = weatherPipeBinaryPath.substring(0, weatherPipeBinaryPath.lastIndexOf("/")) + "/log4j.properties";
 		PropertyConfigurator.configure(log4jConfPath);
+		jobBucketName = bucket;
 		AwsBootstrap(job);
 	}
-	
-	public AWSInterface(String job, String bucket){
-		AwsBootstrap(job); 
-		jobBucketName = bucket;
-	}
+
 	
 	private void AwsBootstrap(String job) {
 		AWSCredentials credentials;
@@ -338,7 +335,6 @@ public class AWSInterface extends MapReduceInterface {
 		int i;
 		Download download;
 		int fileLength;
-        Boolean failed = false;
 		
 
 		BufferedReader lineRead;
@@ -453,7 +449,6 @@ public class AWSInterface extends MapReduceInterface {
         		
             	if(!lastState.endsWith("ERRORS")) {	   
             		bytesTransfered = 0;
-            		failed = true;
             		fileLength = (int)s3client.getObjectMetadata(jobBucketName, jobID + "_output" + "/part-r-00000").getContentLength();
             		GetObjectRequest fileRequest = new GetObjectRequest(jobBucketName, jobID + "_output" + "/part-r-00000");
             		fileRequest.setGeneralProgressListener(new ProgressListener() {
@@ -495,10 +490,7 @@ public class AWSInterface extends MapReduceInterface {
             		
             		lineRead = new BufferedReader(new FileReader(rawOutputFile));
             		
-            		if(failed) {
-            			jobOutput = "FAILED";
-            			break;
-            		}
+
             		jobOutputBuild = new StringBuilder("");
             		while((line = lineRead.readLine()) != null) {
             			if(line.startsWith("Run#")) {
@@ -510,10 +502,12 @@ public class AWSInterface extends MapReduceInterface {
             			}
             			
             		}
+            		
             		jobOutput = jobOutputBuild.toString();
             		break;
             	}
-            	
+
+        		jobOutput = "FAILED";
             	System.out.println("The job has ended with errors, please check the log in " + localLogDir);
             	System.out.printf("Normalized instance hours: %d\n", normalized_hours);
             	System.out.printf("Approximate cost of this run = $%2.02f\n", cost);

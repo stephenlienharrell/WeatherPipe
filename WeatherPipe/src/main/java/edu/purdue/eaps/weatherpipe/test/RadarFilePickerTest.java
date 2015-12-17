@@ -31,7 +31,7 @@ public class RadarFilePickerTest extends TestCase {
 		String station = "KBBX";
 		final String dataBucket = "noaa-nexrad-level2";
 		final String jobID = null;
-		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSInterface awsInterface = new AWSInterface(jobID, null);
 		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		int[] size = new int[2];
 		for(int i = 0; i < 2; i++) {
@@ -58,7 +58,7 @@ public class RadarFilePickerTest extends TestCase {
 		DateTime[] endTimes = { new DateTime(2010, 01, 02, 00, 00, 00), new DateTime(2010, 03, 01, 17, 26, 19),
 				new DateTime(2011, 01, 01, 15, 27, 48) };
 		final String jobID = null;
-		AWSInterface awsInterface = new AWSInterface(jobID);
+		AWSInterface awsInterface = new AWSInterface(jobID, null);
 		AWSAnonInterface awsAnonInterface = new AWSAnonInterface();
 		String station = "KBBX";
 		ArrayList<String> radarFileNames;
