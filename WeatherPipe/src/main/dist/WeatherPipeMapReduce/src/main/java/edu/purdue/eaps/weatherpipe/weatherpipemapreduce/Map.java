@@ -124,6 +124,7 @@ public class Map extends Mapper<LongWritable, Text, Text, Text> {
 					+ "such as not being able to access the network.");
 			System.out.println("Error Message: " + ace.getMessage());
 		}
+		if(ncfile == null) return;
 		analysis = new ResearcherMapReduceAnalysis(context.getConfiguration());
 		if (!analysis.map(ncfile)) {
 			ncfile.close();
