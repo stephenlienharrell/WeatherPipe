@@ -17,6 +17,7 @@ public class WeatherPipeMapReduce {
 
 	public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
+        conf.setStrings("mapreduce.reduce.shuffle.merge.percent", "0.4");
         
         Job job = Job.getInstance(conf, "WeatherPipeMapReduce");
         
