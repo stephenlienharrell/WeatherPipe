@@ -221,7 +221,7 @@ public class WeatherPipe {
 			
 			if (line.hasOption("instance_count")) {
 				config.clearProperty("emr.instance_count");
-				config.addProperty("emr.instance_count", line.getOptionValue("instance_count"));
+				config.addProperty("emr.instance_count", Integer.parseInt(line.getOptionValue("instance_count")));
 			}
 			instanceCount = config.getInt("emr.instance_count", 1);
 			
