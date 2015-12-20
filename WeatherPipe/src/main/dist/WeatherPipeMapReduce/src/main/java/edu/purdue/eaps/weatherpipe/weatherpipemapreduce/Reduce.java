@@ -13,6 +13,7 @@ import org.apache.commons.codec.binary.Base64;
 
 public class Reduce extends Reducer<Text, Text, Text, Text> {	
 	
+	
 	Integer passNum = 0;
 	ResearcherMapReduceAnalysis analysis = null;
 	
@@ -22,6 +23,7 @@ public class Reduce extends Reducer<Text, Text, Text, Text> {
     	for(Text val : str) {	
     		if(!(analysis.reduce(val.toString()) == true)) continue;
     		passNum++;
+    		if(passNum % 10 == 0) System.gc();
     	}
 //    	System.out.println("Final array: " + Arrays.toString((double[])analysis.serializer.serializeMe));
     	
