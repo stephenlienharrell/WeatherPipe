@@ -9,8 +9,12 @@ With these steps to get started you can run a simple analysis from the examples.
 * Download and install [gradle](http://gradle.org/gradle-download/). Gradle can be unzipped and used as is, but the gradle bin directory must be set in your $PATH or WeatherPipe will not work. 
 * Create an [AWS account](http://aws.amazon.com/)
 * Run $ [aws configure](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) to set your AWS credentials.
-* Create default EMR roles by running $ aws emr create-default-roles 
-* Copy an example analysis from the WeatherPipe/ExampleAnalysis directory to WeatherPipe/WeatherPipeMapReduce/src/main/java/edu/purdue/eaps/weatherpipe/weatherpipemapreduce/ResearcherMapReduceAnalysis.java OR use the one that is provided by default.
+* Create default EMR roles by running $ aws emr create-default-roles
+* Compile WeatherPipe by running "gradle build" in the WeatherPipe-0.?/WeatherPipe directory (This is done to avoid java compiler mismatches between the tool and the MapReduce jar)
+* Create a working directory by running "mkdir working"
+* Copy the compiled distribution to the working directory by running "cp build/distributions/WeatherPipe.tar working"
+* Untar the distribution in the working directory "tar xfv WeatherPipe.tar"
+* Use the default analysis OR copy an example analysis from the WeatherPipe/ExampleAnalysis directory to WeatherPipe/WeatherPipeMapReduce/src/main/java/edu/purdue/eaps/weatherpipe/weatherpipemapreduce/ResearcherMapReduceAnalysis.java.
 * In the WeatherPipe/bin directory you can run ./WeatherPipe -s "01/01/2010 07:30:00" -e "01/01/2010 23:00:00" -st KIND
 * Once the job has finished you can find the output in a directory that looks similar to ./WeatherPipeJob2015-12-21T06.07.824 
 * If you used the default analysis the output will be in jsonOutputFile
